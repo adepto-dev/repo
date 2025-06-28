@@ -158,7 +158,7 @@ class JetSmartScraper:
                 logger.error("❌ No se pudo seleccionar el aeropuerto de destino")
                 return []
             # Seleccionar fecha
-            if not self.select_date_new(fecha):
+            if not self.select_date(fecha):
                 logger.error("❌ No se pudo seleccionar la fecha")
                 return []
             # Click en buscar
