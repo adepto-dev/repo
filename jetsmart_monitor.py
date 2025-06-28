@@ -27,7 +27,7 @@ class JetSmartScraper:
 
     def setup_driver(self):
         chrome_options = Options()
-        chrome_options.add_argument("--headless=new")  # Headless moderno
+        chrome_options.add_argument("--headless=chrome")  # Headless moderno
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--disable-gpu")
@@ -53,9 +53,9 @@ class JetSmartScraper:
 
     def save_screenshot(self, name="error.png"):
         try:
-             if not os.path.exists("screenshots"):
-                os.makedirs("screenshots")
-                self.driver.save_screenshot(f"screenshots/{name}")
+            os.makedirs("screenshots", exist_ok=True)
+            self.driver.save_screenshot(f"screenshots/{name}")
+            logger.info(f"🖼 Captura guardada: screenshots/{name}")
         except Exception as e:
             logger.error(f"❌ Error guardando captura: {e}")
 
@@ -96,6 +96,7 @@ class JetSmartScraper:
             return False
         except Exception as e:
             logger.error(f"❌ Error seleccionando aeropuerto {airport_name}: {e}")
+            logger.debug(self.driver.page_source)
             self.save_screenshot(f"airport_error_{airport_code}.png")
             return False
 
@@ -134,7 +135,7 @@ class JetSmartScraper:
         try:
             logger.info(f"🚀 Iniciando búsqueda: {origen_name} → {destino_name} para {fecha}")
             self.driver.get("https://jetsmart.com/uy/es/")
-            time.sleep(5)
+            time.sleep(25)
             self.driver.execute_script("document.querySelectorAll('.modal, .popup, .overlay').forEach(e => e.remove());")
             for selector in [".cookie-accept", ".close-popup", "[data-testid='accept-cookies']", ".modal-close", ".btn-accept"]:
                 try:
@@ -152,6 +153,13 @@ class JetSmartScraper:
                         break
                 except:
                     continue
+            for s in ["[data-testid='origin-input']", "#origin", ".origin-input", "input[placeholder*='Origen']"]:
+                logger.info(f"🔍 Probandoselector: {s}")
+                if self.select_airport(s, origen_code, origen_name):
+                    break
+                else:
+                    logger.error("❌ test")
+                    return []
             if not any(self.select_airport(s, origen_code, origen_name) for s in ["[data-testid='origin-input']", "#origin", ".origin-input", "input[placeholder*='Origen']"]):
                 logger.error("❌ No se pudo seleccionar el aeropuerto de origen")
                 return []
