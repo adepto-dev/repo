@@ -52,31 +52,16 @@ jobs:
     
     - name: Install Chrome
       run: |
-        wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-        sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
-        sudo apt-get update
-        sudo apt-get install -y google-chrome-stable
+        wget https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_137.0.7283.93-1_amd64.deb
+        sudo dpkg -i google-chrome-stable_137.0.7283.93-1_amd64.deb
+        sudo apt-get install -f
     
     - name: Install ChromeDriver
       run: |
-        #!/bin/bash
-
-        # Instalar o actualizar Chrome estable (opcional, descomenta si quieres hacerlo)
-        # wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-        # sudo dpkg -i google-chrome-stable_current_amd64.deb
-        # sudo apt-get install -f
-        
-        # Descargar última versión de ChromeDriver
-        CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE")
-        echo "Descargando ChromeDriver versión: $CHROMEDRIVER_VERSION"
-        
+        CHROMEDRIVER_VERSION=$(curl -s https://chromedriver.storage.googleapis.com/LATEST_RELEASE_137)
         wget -O /tmp/chromedriver.zip "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip"
         sudo unzip -o /tmp/chromedriver.zip -d /usr/local/bin/
         sudo chmod +x /usr/local/bin/chromedriver
-        
-        # Verificar instalación
-        google-chrome --version
-        chromedriver --version
 
     - name: Install Python dependencies
       run: |
