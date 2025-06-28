@@ -78,16 +78,14 @@ class JetSmartScraper:
 
     def select_airport(self, input_selector, country_code, city_code, country_name, city_name):
         try:
-            # Buscar el contenedor general de la ruta
-            route_selectors = self.driver.find_elements(By.CSS_SELECTOR, ".dg-route-selector")
-            if "ORIGIN" in input_selector:
-                container = route_selectors[0]
-            else:
-                container = route_selectors[1]
-            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", container)
-            container.click()
+            # 1. Esperar a que el input esté visible
+            self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, input_selector)))
+            input_elem = self.driver.find_element(By.CSS_SELECTOR, input_selector)
+            # 2. Forzar click en el input usando JS (evita overlays y readonly)
+            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", input_elem)
+            self.driver.execute_script("arguments[0].click();", input_elem)
             time.sleep(1)
-            # Esperar a que la lista de países esté visible
+            # 3. Esperar a que la lista de países esté visible
             country_list_selector = "ul[data-test-id='ROUTE_COUNTRY_LIST'] li[data-test-value]"
             self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, country_list_selector)))
             countries = self.driver.find_elements(By.CSS_SELECTOR, country_list_selector)
@@ -102,7 +100,7 @@ class JetSmartScraper:
                 logger.warning(f"⚠️ País no encontrado: {country_name} ({country_code})")
                 return False
             time.sleep(1)
-            # Esperar a que la lista de ciudades esté visible
+            # 4. Esperar a que la lista de ciudades esté visible
             city_list_selector = "ul[data-test-id='ROUTE_CITY_LIST'] li[data-test-id*='ROUTE_CITY_LIST_ITEM']"
             self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, city_list_selector)))
             cities = self.driver.find_elements(By.CSS_SELECTOR, city_list_selector)
