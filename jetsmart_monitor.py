@@ -45,7 +45,6 @@ class JetSmartScraper:
              if not os.path.exists("screenshots"):
                 os.makedirs("screenshots")
                 self.driver.save_screenshot(f"screenshots/{name}")
-            logger.info(f"📸 Captura guardada: {name}")
         except Exception as e:
             logger.error(f"❌ Error guardando captura: {e}")
 
