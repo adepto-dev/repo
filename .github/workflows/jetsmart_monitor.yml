@@ -59,29 +59,23 @@ jobs:
     
     - name: Install ChromeDriver
       run: |
-        # Obtener versión completa de Chrome
-        CHROME_VERSION=$(google-chrome --version | grep -oP '\d+(\.\d+)+')
-        echo "Chrome version: $CHROME_VERSION"
+        #!/bin/bash
+
+        # Instalar o actualizar Chrome estable (opcional, descomenta si quieres hacerlo)
+        # wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+        # sudo dpkg -i google-chrome-stable_current_amd64.deb
+        # sudo apt-get install -f
         
-        # Obtener sólo el major.minor (ejemplo 114.0)
-        CHROME_MAJOR_MINOR=$(echo "$CHROME_VERSION" | cut -d '.' -f 1,2)
-        echo "Chrome major.minor version: $CHROME_MAJOR_MINOR"
-        
-        # Intentar descargar ChromeDriver para major.minor
-        CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_MAJOR_MINOR}")
-        
-        if [ -z "$CHROMEDRIVER_VERSION" ]; then
-          echo "No ChromeDriver found for version $CHROME_MAJOR_MINOR, using latest stable."
-          CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE")
-        fi
-        
-        echo "ChromeDriver version to download: $CHROMEDRIVER_VERSION"
+        # Descargar última versión de ChromeDriver
+        CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE")
+        echo "Descargando ChromeDriver versión: $CHROMEDRIVER_VERSION"
         
         wget -O /tmp/chromedriver.zip "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip"
-        
-        sudo unzip /tmp/chromedriver.zip -d /usr/local/bin/
+        sudo unzip -o /tmp/chromedriver.zip -d /usr/local/bin/
         sudo chmod +x /usr/local/bin/chromedriver
-
+        
+        # Verificar instalación
+        google-chrome --version
         chromedriver --version
 
     - name: Install Python dependencies
