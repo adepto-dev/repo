@@ -174,7 +174,7 @@ class JetSmartScraper:
             logger.info(f"🚀 Iniciando búsqueda: {origen_name} → {destino_name} para {fecha}")
             
             # 1. Ir a la página principal de JetSmart
-            self.driver.get("https://jetsmart.com/cl/es/")
+            self.driver.get("https://jetsmart.com/uy/es/")
             time.sleep(5)
             
             # 2. Cerrar popups/cookies si aparecen
