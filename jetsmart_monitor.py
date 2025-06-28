@@ -78,11 +78,14 @@ class JetSmartScraper:
 
     def select_airport(self, input_selector, country_code, city_code, country_name, city_name):
         try:
-            # Buscar el input y hacer click en el contenedor padre
-            input_elem = self.driver.find_element(By.CSS_SELECTOR, input_selector)
-            parent = input_elem.find_element(By.XPATH, "./..")
-            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", parent)
-            parent.click()
+            # Buscar el contenedor general de la ruta
+            route_selectors = self.driver.find_elements(By.CSS_SELECTOR, ".dg-route-selector")
+            if "ORIGIN" in input_selector:
+                container = route_selectors[0]
+            else:
+                container = route_selectors[1]
+            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", container)
+            container.click()
             time.sleep(1)
             # Esperar a que la lista de países esté visible
             country_list_selector = "ul[data-test-id='ROUTE_COUNTRY_LIST'] li[data-test-value]"
