@@ -136,6 +136,18 @@ class JetSmartScraper:
             logger.info(f"🚀 Iniciando búsqueda: {origen_name} → {destino_name} para {fecha}")
             self.driver.get("https://jetsmart.com/uy/es/")
             time.sleep(25)
+            # Listar todos los iframes
+            iframes = self.driver.find_elements(By.TAG_NAME, "iframe")
+            logger.info(f"🧩 Número de iframes encontrados: {len(iframes)}")
+            for idx, iframe in enumerate(iframes):
+                try:
+                    logger.info(f"🧪 Intentando entrar al iframe #{idx}")
+                    self.driver.switch_to.frame(iframe)
+                    if self.driver.find_elements(By.CSS_SELECTOR, "[data-testid='origin-input']"):
+                        logger.info(f"✅ Selector encontrado dentro del iframe #{idx}")
+                    self.driver.switch_to.default_content()
+                except Exception as e:
+                    logger.warning(f"⚠️ No se pudo acceder al iframe #{idx}: {e}")
             self.driver.execute_script("document.querySelectorAll('.modal, .popup, .overlay').forEach(e => e.remove());")
             for selector in [".cookie-accept", ".close-popup", "[data-testid='accept-cookies']", ".modal-close", ".btn-accept"]:
                 try:
