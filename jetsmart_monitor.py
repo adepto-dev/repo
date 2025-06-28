@@ -135,11 +135,23 @@ class JetSmartScraper:
             self.save_screenshot(f"date_error_{date_str}.png")
             return False
 
+    def close_cookies_banner(self):
+            try:
+                # Busca el botón "Sí, acepto" y haz click
+                btn = self.driver.find_element(By.XPATH, "//button[normalize-space(text())='Sí, acepto']")
+                if btn.is_displayed():
+                    btn.click()
+                    logger.info("🍪 Banner de cookies cerrado")
+                    time.sleep(1)
+            except Exception:
+                pass  # Si no hay banner, sigue normal
+    
     def search_flights(self, origen_code, origen_name, destino_code, destino_name, fecha):
         try:
             logger.info(f"🚀 Iniciando búsqueda: {origen_name} → {destino_name} para {fecha}")
             self.driver.get("https://jetsmart.com/uy/es/")
             time.sleep(10)
+            close_cookies_banner()
             # Seleccionar solo vuelo
             vuelo_tab = self.driver.find_element(By.XPATH, "//span[contains(text(),'Vuelo')]/ancestor::label")
             if not "active" in vuelo_tab.get_attribute("class"):
