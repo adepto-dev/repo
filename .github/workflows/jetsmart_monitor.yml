@@ -59,20 +59,35 @@ jobs:
     
     - name: Install ChromeDriver
       run: |
-        # Obtener la versión de Chrome
-        CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+')
+        # Obtener versión completa de Chrome
+        CHROME_VERSION=$(google-chrome --version | grep -oP '\d+(\.\d+)+')
         echo "Chrome version: $CHROME_VERSION"
         
-        # Descargar ChromeDriver compatible
-        CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION%%.*}")
+        # Extraer sólo el número mayor (major)
+        CHROME_MAJOR_VERSION=${CHROME_VERSION%%.*}
+        echo "Chrome major version: $CHROME_MAJOR_VERSION"
+        
+        # Intentar obtener la versión compatible de ChromeDriver
+        CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_MAJOR_VERSION}")
+        
+        # Si no se obtiene versión (vacío), usar la última versión estable
+        if [ -z "$CHROMEDRIVER_VERSION" ]; then
+          echo "No ChromeDriver found for version $CHROME_MAJOR_VERSION, using latest stable."
+          CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE")
+        fi
+        
         echo "ChromeDriver version: $CHROMEDRIVER_VERSION"
         
+        # Descargar ChromeDriver
         wget -O /tmp/chromedriver.zip "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip"
+        
+        # Descomprimir y dar permisos
         sudo unzip /tmp/chromedriver.zip -d /usr/local/bin/
         sudo chmod +x /usr/local/bin/chromedriver
         
         # Verificar instalación
         chromedriver --version
+
     
     - name: Install Python dependencies
       run: |
