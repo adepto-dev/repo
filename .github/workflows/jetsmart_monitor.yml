@@ -1,9 +1,9 @@
 name: JetSmart Flight Monitor
 
-#on:
- # schedule:
+on:
+  schedule:
     # Ejecutar cada 15 minutos
-  #  - cron: '*/15 * * * *'
+   - cron: '*/15 * * * *'
   
   # Permitir ejecución manual
   workflow_dispatch:
