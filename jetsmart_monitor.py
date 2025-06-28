@@ -78,10 +78,13 @@ class JetSmartScraper:
 
     def select_airport(self, input_selector, country_code, city_code, country_name, city_name):
         try:
-            # 1. Click en el input para abrir el panel
-            input_field = self.wait_and_click(input_selector)
+            # Buscar el input y hacer click en el contenedor padre
+            input_elem = self.driver.find_element(By.CSS_SELECTOR, input_selector)
+            parent = input_elem.find_element(By.XPATH, "./..")
+            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", parent)
+            parent.click()
             time.sleep(1)
-            # 2. Esperar a que la lista de países esté visible
+            # Esperar a que la lista de países esté visible
             country_list_selector = "ul[data-test-id='ROUTE_COUNTRY_LIST'] li[data-test-value]"
             self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, country_list_selector)))
             countries = self.driver.find_elements(By.CSS_SELECTOR, country_list_selector)
@@ -96,7 +99,7 @@ class JetSmartScraper:
                 logger.warning(f"⚠️ País no encontrado: {country_name} ({country_code})")
                 return False
             time.sleep(1)
-            # 3. Esperar a que la lista de ciudades esté visible
+            # Esperar a que la lista de ciudades esté visible
             city_list_selector = "ul[data-test-id='ROUTE_CITY_LIST'] li[data-test-id*='ROUTE_CITY_LIST_ITEM']"
             self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, city_list_selector)))
             cities = self.driver.find_elements(By.CSS_SELECTOR, city_list_selector)
@@ -112,7 +115,7 @@ class JetSmartScraper:
             logger.error(f"❌ Error seleccionando aeropuerto {city_name}: {e}")
             self.save_screenshot(f"airport_error_{city_code}.png")
             return False
-
+            
     def select_date(self, date_str):
         try:
             # Click en el input de fecha de ida
