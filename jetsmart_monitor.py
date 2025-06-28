@@ -61,9 +61,9 @@ class JetSmartScraper:
 
     def wait_and_click(self, selector, by=By.CSS_SELECTOR, timeout=20):
         try:
-            element = WebDriverWait(self.driver, timeout).until(
-                EC.element_to_be_clickable((by, selector))
-            )
+            logger.info(f"🔍 Esperando y haciendo click en: {selector}")
+            self.wait.until(EC.presence_of_element_located((by, selector)))
+            element = self.wait.until(EC.element_to_be_clickable((by, selector)))
             self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
             time.sleep(1)
             try:
