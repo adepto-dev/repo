@@ -12,6 +12,8 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, ElementClickInterceptedException
 import logging
+import shutil
+from selenium.webdriver.chrome.service import Service
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -25,19 +27,28 @@ class JetSmartScraper:
 
     def setup_driver(self):
         chrome_options = Options()
-        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--headless=new")  # Headless moderno
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--window-size=1920,1080")
         chrome_options.add_argument("--user-agent=Mozilla/5.0")
 
+        # Detectar binarios de Chromium y ChromeDriver
+        chromium_path = shutil.which("chromium-browser") or shutil.which("chromium")
+        chromedriver_path = shutil.which("chromedriver")
+    
+        if not chromium_path or not chromedriver_path:
+            raise EnvironmentError("❌ No se encontró Chromium o ChromeDriver en el sistema.")
+    
+        chrome_options.binary_location = chromium_path
         try:
-            self.driver = webdriver.Chrome(options=chrome_options)
+            service = Service(executable_path=chromedriver_path)
+            self.driver = webdriver.Chrome(service=service, options=chrome_options)
             self.wait = WebDriverWait(self.driver, 30)
-            logger.info("✅ Driver de Chrome iniciado correctamente")
+            logger.info("✅ Driver de Chromium iniciado correctamente")
         except Exception as e:
-            logger.error(f"❌ Error al iniciar Chrome: {e}")
+            logger.error(f"❌ Error al iniciar Chromium: {e}")
             raise
 
     def save_screenshot(self, name="error.png"):
