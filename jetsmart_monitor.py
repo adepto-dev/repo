@@ -151,7 +151,7 @@ class JetSmartScraper:
             logger.info(f"🚀 Iniciando búsqueda: {origen_name} → {destino_name} para {fecha}")
             self.driver.get("https://jetsmart.com/uy/es/")
             time.sleep(10)
-            close_cookies_banner()
+            self.close_cookies_banner()
             # Seleccionar solo vuelo
             vuelo_tab = self.driver.find_element(By.XPATH, "//span[contains(text(),'Vuelo')]/ancestor::label")
             if not "active" in vuelo_tab.get_attribute("class"):
