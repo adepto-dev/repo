@@ -78,12 +78,12 @@ class JetSmartScraper:
 
     def select_airport(self, input_selector, country_code, city_code, country_name, city_name):
         try:
-            # Click en el input de origen/destino
+            # 1. Click en el input para abrir el panel
             input_field = self.wait_and_click(input_selector)
             time.sleep(1)
-            # Seleccionar país
+            # 2. Esperar a que la lista de países esté visible
             country_list_selector = "ul[data-test-id='ROUTE_COUNTRY_LIST'] li[data-test-value]"
-            self.wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, country_list_selector)))
+            self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, country_list_selector)))
             countries = self.driver.find_elements(By.CSS_SELECTOR, country_list_selector)
             found_country = False
             for c in countries:
@@ -96,9 +96,9 @@ class JetSmartScraper:
                 logger.warning(f"⚠️ País no encontrado: {country_name} ({country_code})")
                 return False
             time.sleep(1)
-            # Seleccionar ciudad
+            # 3. Esperar a que la lista de ciudades esté visible
             city_list_selector = "ul[data-test-id='ROUTE_CITY_LIST'] li[data-test-id*='ROUTE_CITY_LIST_ITEM']"
-            self.wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, city_list_selector)))
+            self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, city_list_selector)))
             cities = self.driver.find_elements(By.CSS_SELECTOR, city_list_selector)
             for city in cities:
                 if city_code.upper() == city.get_attribute("data-test-value").upper() or city_name.lower() in city.text.lower():
