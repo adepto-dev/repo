@@ -11,31 +11,31 @@ on:
       origen_code:
         description: 'Código del aeropuerto de origen'
         required: false
-        default: 'SCL'
+        default: 'MVD'
       origen_name:
         description: 'Nombre del aeropuerto de origen'
         required: false
-        default: 'Santiago'
+        default: 'Montevideo'
       destino_code:
         description: 'Código del aeropuerto de destino'
         required: false
-        default: 'BUE'
+        default: 'RIO'
       destino_name:
         description: 'Nombre del aeropuerto de destino'
         required: false
-        default: 'Buenos Aires'
+        default: 'Rio de Janeiro'
       fecha_inicio:
         description: 'Fecha de inicio (YYYY-MM-DD)'
         required: false
-        default: '2025-07-01'
+        default: '2026-02-13'
       fecha_fin:
         description: 'Fecha de fin (YYYY-MM-DD)'
         required: false
-        default: '2025-07-31'
+        default: '2026-02-21'
       precio_max:
-        description: 'Precio máximo en CLP'
+        description: 'Precio máximo en USD'
         required: false
-        default: '80000'
+        default: '150'
 
 jobs:
   monitor-flights:
