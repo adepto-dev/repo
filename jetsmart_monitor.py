@@ -150,11 +150,11 @@ class JetSmartScraper:
                 one_way_radio.click()
                 time.sleep(1)
             # Seleccionar origen
-            if not self.select_airport_new("[data-test-id='ROUTE_ORIGIN_INPUT']", origen_code[:2], origen_code, origen_name, origen_name):
+            if not self.select_airport("[data-test-id='ROUTE_ORIGIN_INPUT']", origen_code[:2], origen_code, origen_name, origen_name):
                 logger.error("❌ No se pudo seleccionar el aeropuerto de origen")
                 return []
             # Seleccionar destino
-            if not self.select_airport_new("[data-test-id='ROUTE_DESTINATION_INPUT']", destino_code[:2], destino_code, destino_name, destino_name):
+            if not self.select_airport("[data-test-id='ROUTE_DESTINATION_INPUT']", destino_code[:2], destino_code, destino_name, destino_name):
                 logger.error("❌ No se pudo seleccionar el aeropuerto de destino")
                 return []
             # Seleccionar fecha
