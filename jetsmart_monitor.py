@@ -27,7 +27,7 @@ class JetSmartScraper:
 
     def setup_driver(self):
         chrome_options = Options()
-        chrome_options.add_argument("--headless=chrome")  # Headless moderno
+        chrome_options.add_argument("--headless")  # Headless moderno
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--disable-gpu")
@@ -153,13 +153,6 @@ class JetSmartScraper:
                         break
                 except:
                     continue
-            for s in ["[data-testid='origin-input']", "#origin", ".origin-input", "input[placeholder*='Origen']"]:
-                logger.info(f"🔍 Probandoselector: {s}")
-                if self.select_airport(s, origen_code, origen_name):
-                    break
-                else:
-                    logger.error("❌ test")
-                    return []
             if not any(self.select_airport(s, origen_code, origen_name) for s in ["[data-testid='origin-input']", "#origin", ".origin-input", "input[placeholder*='Origen']"]):
                 logger.error("❌ No se pudo seleccionar el aeropuerto de origen")
                 return []
