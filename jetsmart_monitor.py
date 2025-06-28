@@ -83,10 +83,10 @@ class JetSmartScraper:
             input_field.clear()
             input_field.send_keys(airport_name)
             self.wait.until(
-                EC.presence_of_all_elements_located((By.CSS_SELECTOR, "[data-testid*='airport-option'], .airport-option, .dropdown-item"))
+                EC.presence_of_all_elements_located((By.CSS_SELECTOR, "[data-test-id*='airport-option'], .airport-option, .dropdown-item"))
             )
             time.sleep(1)
-            dropdown_options = self.driver.find_elements(By.CSS_SELECTOR, "[data-testid*='airport-option'], .airport-option, .dropdown-item")
+            dropdown_options = self.driver.find_elements(By.CSS_SELECTOR, "[data-test-id*='airport-option'], .airport-option, .dropdown-item")
             for option in dropdown_options:
                 if airport_code.upper() in option.text.upper() or airport_name.upper() in option.text.upper():
                     self.driver.execute_script("arguments[0].click();", option)
@@ -106,7 +106,7 @@ class JetSmartScraper:
             day = target_date.day
             month = target_date.month
             year = target_date.year
-            self.wait_and_click("[data-testid='departure-date-input']")
+            self.wait_and_click("[data-test-id='departure-date-input']")
             time.sleep(1)
             for _ in range(12):
                 calendar_header = self.driver.find_element(By.CSS_SELECTOR, ".calendar-title, .month-year")
@@ -143,13 +143,13 @@ class JetSmartScraper:
                 try:
                     logger.info(f"🧪 Intentando entrar al iframe #{idx}")
                     self.driver.switch_to.frame(iframe)
-                    if self.driver.find_elements(By.CSS_SELECTOR, "[data-testid='origin-input']"):
+                    if self.driver.find_elements(By.CSS_SELECTOR, "[data-test-id='origin-input']"):
                         logger.info(f"✅ Selector encontrado dentro del iframe #{idx}")
                     self.driver.switch_to.default_content()
                 except Exception as e:
                     logger.warning(f"⚠️ No se pudo acceder al iframe #{idx}: {e}")
             self.driver.execute_script("document.querySelectorAll('.modal, .popup, .overlay').forEach(e => e.remove());")
-            for selector in [".cookie-accept", ".close-popup", "[data-testid='accept-cookies']", ".modal-close", ".btn-accept"]:
+            for selector in [".cookie-accept", ".close-popup", "[data-test-id='accept-cookies']", ".modal-close", ".btn-accept"]:
                 try:
                     popup = self.driver.find_element(By.CSS_SELECTOR, selector)
                     if popup.is_displayed():
@@ -157,7 +157,7 @@ class JetSmartScraper:
                         time.sleep(1)
                 except:
                     continue
-            for selector in ["[data-testid='one-way-radio']", "input[value='one-way']", ".radio-one-way"]:
+            for selector in ["[data-test-id='one-way-radio']", "input[value='one-way']", ".radio-one-way"]:
                 try:
                     btn = self.driver.find_element(By.CSS_SELECTOR, selector)
                     if not btn.is_selected():
@@ -165,20 +165,20 @@ class JetSmartScraper:
                         break
                 except:
                     continue
-            if not any(self.select_airport(s, origen_code, origen_name) for s in ["[data-testid='origin-input']", "#origin", ".origin-input", "input[placeholder*='Origen']"]):
+            if not any(self.select_airport(s, origen_code, origen_name) for s in ["[data-test-id='origin-input']", "#origin", ".origin-input", "input[placeholder*='Origen']"]):
                 logger.error("❌ No se pudo seleccionar el aeropuerto de origen")
                 return []
-            if not any(self.select_airport(s, destino_code, destino_name) for s in ["[data-testid='destination-input']", "#destination", ".destination-input", "input[placeholder*='Destino']"]):
+            if not any(self.select_airport(s, destino_code, destino_name) for s in ["[data-test-id='destination-input']", "#destination", ".destination-input", "input[placeholder*='Destino']"]):
                 logger.error("❌ No se pudo seleccionar el aeropuerto de destino")
                 return []
             if not self.select_date(fecha):
                 logger.error("❌ No se pudo seleccionar la fecha")
                 return []
-            if not any(self.wait_and_click(s) for s in ["[data-testid='search-button']", ".search-button", "button[type='submit']"]):
+            if not any(self.wait_and_click(s) for s in ["[data-test-id='search-button']", ".search-button", "button[type='submit']"]):
                 logger.error("❌ No se pudo hacer click en buscar")
                 return []
             logger.info("🔍 Esperando resultados...")
-            self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".flight-result, .flight-option, [data-testid='flight-card'], .flight-card")))
+            self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".flight-result, .flight-option, [data-test-id='flight-card'], .flight-card")))
             return self.extract_flight_results(origen_code, destino_code, fecha)
         except Exception as e:
             logger.error(f"❌ Error en búsqueda de vuelos: {e}")
