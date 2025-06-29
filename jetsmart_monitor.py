@@ -162,22 +162,32 @@ class JetSmartScraper:
 
     def close_subscription_popup(self):
         try:
-            # Espera hasta 10 segundos a que aparezca el botón de cerrar
-            for _ in range(30):
+            # Espera hasta 20 segundos a que aparezca el botón de cerrar
+            for _ in range(20):
                 try:
+                    # Intenta encontrar por CSS
                     close_btn = self.driver.find_element(By.CSS_SELECTOR, ".close_btn_thick")
-                    if close_btn.is_displayed():
+                except Exception:
+                    # Intenta por XPATH como backup
+                    try:
+                        close_btn = self.driver.find_element(By.XPATH, "//div[contains(@class, 'close_btn_thick')]")
+                    except Exception:
+                        close_btn = None
+    
+                if close_btn and close_btn.is_displayed():
+                    try:
+                        self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", close_btn)
+                        self.driver.execute_script("arguments[0].click();", close_btn)
+                    except Exception:
                         try:
                             close_btn.click()
                         except Exception:
-                            self.driver.execute_script("arguments[0].click();", close_btn)
-                        logger.info("🛑 Popup de suscripción cerrado")
-                        time.sleep(1)
-                        return
-                except Exception:
-                    pass
+                            pass
+                    logger.info("🛑 Popup de suscripción cerrado")
+                    time.sleep(1)
+                    return
                 time.sleep(1)
-            logger.warning("❌ No se pudo cerrar el popup de suscripción (no se encontró el botón).")
+            logger.warning("❌ No se pudo cerrar el popup de suscripción (no se encontró el botón o no fue clickeable).")
             self.save_screenshot("subscription_popup_not_closed.png")
         except Exception as e:
             logger.error(f"❌ Error cerrando popup de suscripción: {e}")
