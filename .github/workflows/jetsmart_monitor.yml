@@ -31,11 +31,11 @@ on:
       fecha_fin:
         description: 'Fecha de fin (YYYY-MM-DD)'
         required: false
-        default: '2026-02-21'
+        default: '2026-02-14'
       precio_max:
         description: 'Precio máximo en USD'
         required: false
-        default: '150'
+        default: '200'
 
 jobs:
   monitor-flights:
