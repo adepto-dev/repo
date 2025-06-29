@@ -139,15 +139,14 @@ class JetSmartScraper:
 
     def close_cookies_banner(self):
         try:
-            # Espera hasta 15 segundos a que el botón esté presente
+            # Espera hasta 15 segundos a que el div esté presente y visible
             for _ in range(15):
                 try:
-                    btn = self.driver.find_element(By.XPATH, "//button[normalize-space(text())='Sí, acepto']")
-                    if btn.is_displayed() and btn.is_enabled():
+                    btn = self.driver.find_element(By.CSS_SELECTOR, "div#consent_prompt_submit")
+                    if btn.is_displayed():
                         try:
                             btn.click()
                         except Exception:
-                            # Si el click normal falla, intenta con JS
                             self.driver.execute_script("arguments[0].click();", btn)
                         logger.info("🍪 Banner de cookies cerrado")
                         time.sleep(1)
@@ -155,7 +154,6 @@ class JetSmartScraper:
                 except Exception:
                     pass
                 time.sleep(1)
-            # Si no se pudo cerrar, guardar screenshot para debug
             logger.error("❌ No se pudo cerrar el banner de cookies.")
             self.save_screenshot("cookies_not_closed.png")
         except Exception as e:
