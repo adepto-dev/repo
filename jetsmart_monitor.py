@@ -14,6 +14,8 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException,
 import logging
 import shutil
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -136,15 +138,16 @@ class JetSmartScraper:
             return False
 
     def close_cookies_banner(self):
-            try:
-                # Busca el botón "Sí, acepto" y haz click
-                btn = self.driver.find_element(By.XPATH, "//button[normalize-space(text())='Sí, acepto']")
-                if btn.is_displayed():
-                    btn.click()
-                    logger.info("🍪 Banner de cookies cerrado")
-                    time.sleep(1)
-            except Exception:
-                pass  # Si no hay banner, sigue normal
+        try:
+            # Espera hasta 10 segundos a que el botón esté presente y clickeable
+            btn = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, "//button[normalize-space(text())='Sí, acepto']"))
+            )
+            btn.click()
+            logger.info("🍪 Banner de cookies cerrado")
+            time.sleep(1)
+        except Exception as e:
+            logger.info("No se encontró banner de cookies o no fue necesario cerrarlo.")
     
     def search_flights(self, origen_code, origen_name, destino_code, destino_name, fecha):
         try:
