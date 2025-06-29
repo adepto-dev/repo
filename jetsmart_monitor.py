@@ -29,7 +29,7 @@ class JetSmartScraper:
 
     def setup_driver(self):
         chrome_options = Options()
-        chrome_options.add_argument("--headless")  # Headless moderno
+        #chrome_options.add_argument("--headless")  # Headless moderno
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--disable-gpu")
@@ -167,16 +167,36 @@ class JetSmartScraper:
                 try:
                     close_btn = self.driver.find_element(By.CSS_SELECTOR, "button.close.modal-close")
                     if close_btn.is_displayed():
-                        self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", close_btn)
-                        self.driver.execute_script("arguments[0].click();", close_btn)
-                        logger.info("🛑 Popup de suscripción cerrado")
-                        time.sleep(1)
-                        return
+                        try:
+                            # Intenta click JS
+                            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", close_btn)
+                            self.driver.execute_script("arguments[0].click();", close_btn)
+                            logger.info("🛑 Popup de suscripción cerrado (JS click)")
+                            time.sleep(1)
+                            return
+                        except Exception as e_js:
+                            try:
+                                # Intenta ActionChains
+                                actions = ActionChains(self.driver)
+                                actions.move_to_element(close_btn).click().perform()
+                                logger.info("🛑 Popup de suscripción cerrado (ActionChains)")
+                                time.sleep(1)
+                                return
+                            except Exception as e_ac:
+                                logger.error(f"❌ No se pudo clickear el botón de cerrar: JS: {e_js}, AC: {e_ac}")
+                                self.save_screenshot("subscription_popup_click_fail.png")
+                                return
                 except Exception:
                     pass
                 time.sleep(1)
-            logger.warning("❌ No se pudo cerrar el popup de suscripción (no se encontró el botón o no fue clickeable).")
-            self.save_screenshot("subscription_popup_not_closed.png")
+            # Si el botón existe pero no se pudo clickear
+            try:
+                close_btn = self.driver.find_element(By.CSS_SELECTOR, "button.close.modal-close")
+                self.save_screenshot("subscription_popup_visible_but_not_closed.png")
+                logger.error("❌ El botón de cerrar está visible pero no se pudo clickear.")
+            except Exception:
+                logger.warning("❌ No se pudo cerrar el popup de suscripción (no se encontró el botón).")
+                self.save_screenshot("subscription_popup_not_found.png")
         except Exception as e:
             logger.error(f"❌ Error cerrando popup de suscripción: {e}")
             self.save_screenshot("subscription_popup_error.png")
