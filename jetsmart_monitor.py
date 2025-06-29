@@ -139,15 +139,28 @@ class JetSmartScraper:
 
     def close_cookies_banner(self):
         try:
-            # Espera hasta 10 segundos a que el botón esté presente y clickeable
-            btn = WebDriverWait(self.driver, 10).until(
-                EC.element_to_be_clickable((By.XPATH, "//button[normalize-space(text())='Sí, acepto']"))
-            )
-            btn.click()
-            logger.info("🍪 Banner de cookies cerrado")
-            time.sleep(1)
+            # Espera hasta 15 segundos a que el botón esté presente
+            for _ in range(15):
+                try:
+                    btn = self.driver.find_element(By.XPATH, "//button[normalize-space(text())='Sí, acepto']")
+                    if btn.is_displayed() and btn.is_enabled():
+                        try:
+                            btn.click()
+                        except Exception:
+                            # Si el click normal falla, intenta con JS
+                            self.driver.execute_script("arguments[0].click();", btn)
+                        logger.info("🍪 Banner de cookies cerrado")
+                        time.sleep(1)
+                        return
+                except Exception:
+                    pass
+                time.sleep(1)
+            # Si no se pudo cerrar, guardar screenshot para debug
+            logger.error("❌ No se pudo cerrar el banner de cookies.")
+            self.save_screenshot("cookies_not_closed.png")
         except Exception as e:
-            logger.info("No se encontró banner de cookies o no fue necesario cerrarlo.")
+            logger.error(f"❌ Error cerrando banner de cookies: {e}")
+            self.save_screenshot("cookies_error.png")
     
     def search_flights(self, origen_code, origen_name, destino_code, destino_name, fecha):
         try:
