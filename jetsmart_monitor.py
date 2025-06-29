@@ -159,6 +159,24 @@ class JetSmartScraper:
         except Exception as e:
             logger.error(f"❌ Error cerrando banner de cookies: {e}")
             self.save_screenshot("cookies_error.png")
+
+    def close_subscription_popup(self):
+        try:
+            # Espera hasta 10 segundos a que aparezca el botón de cerrar
+            for _ in range(10):
+                try:
+                    close_btn = self.driver.find_element(By.CSS_SELECTOR, ".close_btn_thick")
+                    if close_btn.is_displayed():
+                        self.driver.execute_script("arguments[0].click();", close_btn)
+                        logger.info("🛑 Popup de suscripción cerrado")
+                        time.sleep(1)
+                        return
+                except Exception:
+                    pass
+                time.sleep(1)
+        except Exception as e:
+            logger.error(f"❌ Error cerrando popup de suscripción: {e}")
+            self.save_screenshot("subscription_popup_error.png")
     
     def search_flights(self, origen_code, origen_name, destino_code, destino_name, fecha):
         try:
@@ -166,6 +184,7 @@ class JetSmartScraper:
             self.driver.get("https://jetsmart.com/uy/es/")
             time.sleep(10)
             self.close_cookies_banner()
+            self.close_subscription_popup()
             # Seleccionar solo vuelo
             vuelo_tab = self.driver.find_element(By.XPATH, "//span[contains(text(),'Vuelo')]/ancestor::label")
             if not "active" in vuelo_tab.get_attribute("class"):
