@@ -163,17 +163,22 @@ class JetSmartScraper:
     def close_subscription_popup(self):
         try:
             # Espera hasta 10 segundos a que aparezca el botón de cerrar
-            for _ in range(10):
+            for _ in range(30):
                 try:
                     close_btn = self.driver.find_element(By.CSS_SELECTOR, ".close_btn_thick")
                     if close_btn.is_displayed():
-                        self.driver.execute_script("arguments[0].click();", close_btn)
+                        try:
+                            close_btn.click()
+                        except Exception:
+                            self.driver.execute_script("arguments[0].click();", close_btn)
                         logger.info("🛑 Popup de suscripción cerrado")
                         time.sleep(1)
                         return
                 except Exception:
                     pass
                 time.sleep(1)
+            logger.warning("❌ No se pudo cerrar el popup de suscripción (no se encontró el botón).")
+            self.save_screenshot("subscription_popup_not_closed.png")
         except Exception as e:
             logger.error(f"❌ Error cerrando popup de suscripción: {e}")
             self.save_screenshot("subscription_popup_error.png")
