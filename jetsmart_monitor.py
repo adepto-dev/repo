@@ -270,7 +270,9 @@ class JetSmartScraper:
         try:
             logger.info(f"🚀 Iniciando búsqueda: {origen_name} → {destino_name} para {fecha}")
             self.driver.get("https://jetsmart.com/uy/es/")
-            time.sleep(5)
+            time.sleep(10)
+            self.close_cookies_banner()
+            self.close_subscription_popup()
 
             # Cerrar popups si existen
             try:
@@ -309,10 +311,10 @@ class JetSmartScraper:
             self.save_screenshot("search_flights_error.png")
             return []
 
-def close(self):
-        if self.driver:
-            self.driver.quit()
-            logger.info("🔒 Driver cerrado")
+    def close(self):
+            if self.driver:
+                self.driver.quit()
+                logger.info("🔒 Driver cerrado")
 
 def main():
     config = {
