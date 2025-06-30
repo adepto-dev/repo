@@ -162,21 +162,25 @@ class JetSmartScraper:
 
     def close_subscription_popup(self):
         try:
-            # Espera hasta 20 segundos a que aparezca el botón de cerrar del modal
-            for _ in range(20):
+            # Elimina overlays que puedan estar bloqueando el click
+            self.driver.execute_script("""
+                let overlays = document.querySelectorAll('.modal-backdrop, .fade, .show, .modal');
+                overlays.forEach(el => el.style.zIndex = '1');
+            """)
+            # Espera hasta 30 segundos a que aparezca el botón de cerrar del modal
+            for _ in range(30):
                 try:
                     close_btn = self.driver.find_element(By.CSS_SELECTOR, "button.close.modal-close")
-                    if close_btn.is_displayed():
+                    if close_btn.is_displayed() and close_btn.is_enabled():
                         try:
-                            # Intenta click JS
                             self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", close_btn)
+                            self.driver.execute_script("arguments[0].removeAttribute('disabled');", close_btn)
                             self.driver.execute_script("arguments[0].click();", close_btn)
                             logger.info("🛑 Popup de suscripción cerrado (JS click)")
                             time.sleep(1)
                             return
                         except Exception as e_js:
                             try:
-                                # Intenta ActionChains
                                 actions = ActionChains(self.driver)
                                 actions.move_to_element(close_btn).click().perform()
                                 logger.info("🛑 Popup de suscripción cerrado (ActionChains)")
