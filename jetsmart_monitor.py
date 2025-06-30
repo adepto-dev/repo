@@ -23,31 +23,43 @@ logger = logging.getLogger(__name__)
 
 class JetSmartScraper:
     def seleccionar_ciudad_por_codigo(self, codigo_ciudad):
-        try:
-            self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "[data-test-id^='ROUTE_COUNTRY_LIST_ITEM']")))
-            pais_elements = self.driver.find_elements(By.CSS_SELECTOR, "[data-test-id^='ROUTE_COUNTRY_LIST_ITEM']")
-            for pais in pais_elements:
-                try:
-                    self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", pais)
-                    pais.click()
-                    time.sleep(1)
-                    break
-                except:
-                    continue
+        self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "[data-test-id^='ROUTE_COUNTRY_LIST_ITEM']")))
+        pais_elements = self.driver.find_elements(By.CSS_SELECTOR, "[data-test-id^='ROUTE_COUNTRY_LIST_ITEM']")
+        for pais in pais_elements:
+            try:
+                self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", pais)
+                pais.click()
+                time.sleep(1)
+                break
+            except:
+                continue
 
-            ciudad_elements = self.driver.find_elements(By.CSS_SELECTOR, "[data-test-id^='ROUTE_CITY_LIST_ITEM']")
-            for ciudad in ciudad_elements:
-                if ciudad.get_attribute("data-test-value") == codigo_ciudad:
-                    self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", ciudad)
-                    ciudad.click()
-                    logger.info(f"✅ Ciudad seleccionada: {codigo_ciudad}")
-                    return True
-            logger.warning(f"⚠️ No se encontró la ciudad {codigo_ciudad}")
-            return False
-        except Exception as e:
-            logger.error(f"❌ Error seleccionando ciudad {codigo_ciudad}: {e}")
-            self.save_screenshot(f"ciudad_error_{codigo_ciudad}.png")
-            return False
+        # Espera a que la lista de ciudades esté visible
+        city_list_selector = "ul[data-test-id='ROUTE_CITY_LIST'] li[data-test-id*='ROUTE_CITY_LIST_ITEM']"
+        self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, city_list_selector)))
+        cities = self.driver.find_elements(By.CSS_SELECTOR, city_list_selector)
+
+        if len(cities) == 1:
+            # Si solo hay una ciudad, haz click directo
+            city = cities[0]
+            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", city)
+            city.click()
+            logger.info(f"✅ Ciudad seleccionada automáticamente: {city.text}")
+            self.save_screenshot(f"city_selected_{city_code}.png")
+            return True
+
+        # Si hay varias, busca la correcta
+        for city in cities:
+            if city_code.upper() == city.get_attribute("data-test-value").upper() or city_name.lower() in city.text.lower():
+                self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", city)
+                city.click()
+                logger.info(f"✅ Ciudad seleccionada: {city_name} ({city_code})")
+                self.save_screenshot(f"city_selected_{city_code}.png")
+                return True
+
+        logger.warning(f"⚠️ Ciudad no encontrada: {city_name} ({city_code})")
+        self.save_screenshot(f"city_not_found_{city_code}.png")
+        return False
 
     def seleccionar_fecha_calendario(self, fecha_str):
         try:
