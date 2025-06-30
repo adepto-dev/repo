@@ -22,17 +22,14 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 class JetSmartScraper:
-    def seleccionar_ciudad_por_codigo(self, codigo_ciudad):
-        self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "[data-test-id^='ROUTE_COUNTRY_LIST_ITEM']")))
-        pais_elements = self.driver.find_elements(By.CSS_SELECTOR, "[data-test-id^='ROUTE_COUNTRY_LIST_ITEM']")
-        for pais in pais_elements:
-            try:
-                self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", pais)
-                pais.click()
-                time.sleep(1)
-                break
-            except:
-                continue
+    def seleccionar_ciudad_por_codigo(self, codigo_pais, codigo_ciudad):
+        # Espera y selecciona el país correcto
+        country_selector = f"ul[data-test-id='ROUTE_COUNTRY_LIST'] li[data-test-value='{codigo_pais.upper()}']"
+        self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, country_selector)))
+        country_elem = self.driver.find_element(By.CSS_SELECTOR, country_selector)
+        self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", country_elem)
+        country_elem.click()
+        time.sleep(10)
 
         # Espera a que la lista de ciudades esté visible
         city_list_selector = "ul[data-test-id='ROUTE_CITY_LIST'] li[data-test-id*='ROUTE_CITY_LIST_ITEM']"
@@ -45,20 +42,20 @@ class JetSmartScraper:
             self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", city)
             city.click()
             logger.info(f"✅ Ciudad seleccionada automáticamente: {city.text}")
-            self.save_screenshot(f"city_selected_{city_code}.png")
+            self.save_screenshot(f"city_selected_{codigo_ciudad}.png")
             return True
 
         # Si hay varias, busca la correcta
         for city in cities:
-            if city_code.upper() == city.get_attribute("data-test-value").upper() or city_name.lower() in city.text.lower():
+            if codigo_ciudad.upper() == city.get_attribute("data-test-value").upper() or city.text.lower() in city.text.lower():
                 self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", city)
                 city.click()
-                logger.info(f"✅ Ciudad seleccionada: {city_name} ({city_code})")
-                self.save_screenshot(f"city_selected_{city_code}.png")
+                logger.info(f"✅ Ciudad seleccionada: {city.text} ({codigo_ciudad})")
+                self.save_screenshot(f"city_selected_{codigo_ciudad}.png")
                 return True
 
-        logger.warning(f"⚠️ Ciudad no encontrada: {city_name} ({city_code})")
-        self.save_screenshot(f"city_not_found_{city_code}.png")
+        logger.warning(f"⚠️ Ciudad no encontrada: {city.text} ({codigo_ciudad})")
+        self.save_screenshot(f"city_not_found_{codigo_ciudad}.png")
         return False
 
     def seleccionar_fecha_calendario(self, fecha_str):
@@ -297,13 +294,13 @@ class JetSmartScraper:
 
             # Hacer clic en el input de origen para activar el selector
             self.wait_and_click("[data-test-id='ROUTE_ORIGIN_INPUT']")
-            if not self.seleccionar_ciudad_por_codigo(origen_code):
+            if not self.seleccionar_ciudad_por_codigo('UY', origen_code):
                 logger.error("❌ No se pudo seleccionar el aeropuerto de origen")
                 return []
 
             # Hacer clic en el input de destino
             self.wait_and_click("[data-test-id='ROUTE_DESTINATION_INPUT']")
-            if not self.seleccionar_ciudad_por_codigo(destino_code):
+            if not self.seleccionar_ciudad_por_codigo('BR', destino_code):
                 logger.error("❌ No se pudo seleccionar el aeropuerto de destino")
                 return []
 
