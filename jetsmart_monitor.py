@@ -80,46 +80,29 @@ class JetSmartScraper:
 
     def select_airport(self, input_selector, country_code, city_code, country_name, city_name):
         try:
-            # Espera a que el input esté clickeable y remueve readonly si existe
             self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, input_selector)))
             input_elem = self.driver.find_element(By.CSS_SELECTOR, input_selector)
             self.driver.execute_script("arguments[0].removeAttribute('readonly');", input_elem)
-            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", input_elem)
             self.driver.execute_script("arguments[0].click();", input_elem)
             time.sleep(1)
-            self.save_screenshot(f"after_click_{city_code}.png")
+            self.save_screenshot(f"01_clicked_{city_code}.png")
 
-            # Espera a que la lista de países esté visible
-            country_list_selector = "ul[data-test-id='ROUTE_COUNTRY_LIST'] li[data-test-value]"
-            self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, country_list_selector)))
-            countries = self.driver.find_elements(By.CSS_SELECTOR, country_list_selector)
-            found_country = False
-            for c in countries:
-                if country_code.upper() == c.get_attribute("data-test-value").upper() or country_name.lower() in c.text.lower():
-                    self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", c)
-                    c.click()
-                    found_country = True
-                    break
-            if not found_country:
-                logger.warning(f"⚠️ País no encontrado: {country_name} ({country_code})")
-                self.save_screenshot(f"country_not_found_{country_code}.png")
-                return False
+            # Seleccionar país
+            country_li = self.wait.until(EC.presence_of_element_located(
+                (By.CSS_SELECTOR, f"ul[data-test-id='ROUTE_COUNTRY_LIST'] li[data-test-value='{country_code.upper()}']")
+            ))
+            self.driver.execute_script("arguments[0].click();", country_li)
             time.sleep(1)
+            self.save_screenshot(f"02_country_{country_code}.png")
 
-            # Espera a que la lista de ciudades esté visible
-            city_list_selector = "ul[data-test-id='ROUTE_CITY_LIST'] li[data-test-id*='ROUTE_CITY_LIST_ITEM']"
-            self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, city_list_selector)))
-            cities = self.driver.find_elements(By.CSS_SELECTOR, city_list_selector)
-            for city in cities:
-                if city_code.upper() == city.get_attribute("data-test-value").upper() or city_name.lower() in city.text.lower():
-                    self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", city)
-                    city.click()
-                    logger.info(f"✅ Ciudad seleccionada: {city_name} ({city_code})")
-                    self.save_screenshot(f"city_selected_{city_code}.png")
-                    return True
-            logger.warning(f"⚠️ Ciudad no encontrada: {city_name} ({city_code})")
-            self.save_screenshot(f"city_not_found_{city_code}.png")
-            return False
+            # Seleccionar ciudad
+            city_li = self.wait.until(EC.presence_of_element_located(
+                (By.CSS_SELECTOR, f"ul[data-test-id='ROUTE_CITY_LIST'] li[data-test-value='{city_code.upper()}']")
+            ))
+            self.driver.execute_script("arguments[0].click();", city_li)
+            logger.info(f"✅ Ciudad seleccionada: {city_name} ({city_code})")
+            self.save_screenshot(f"03_city_{city_code}.png")
+            return True
         except Exception as e:
             logger.error(f"❌ Error seleccionando aeropuerto {city_name}: {e}")
             self.save_screenshot(f"airport_error_{city_code}.png")
