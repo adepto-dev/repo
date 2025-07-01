@@ -118,6 +118,7 @@ class JetSmartScraper:
     # que esta fallando ahora, tenemos que ver como se interactua y cambiar acorde
 
     def seleccionar_fechas(self, fecha_salida: str, fecha_regreso: str):
+        print("🔍 ENTRÉ A seleccionar_fechas")
         time.sleep(20)  # Asegura renderizado
         logger.info(f"funciono entrar a la funcion?")
         def abrir_calendario():
@@ -184,8 +185,6 @@ class JetSmartScraper:
         if self.avanzar_hasta_mes(fecha_regreso):
             self.seleccionar_dia(fecha_regreso)
             time.sleep(0.5)
-
-
 
     def close_cookies_banner(self):
         try:
@@ -286,9 +285,9 @@ class JetSmartScraper:
 
             # Seleccionar la fecha (solo ida)
             self.wait_and_click("[data-test-id='DATE_ONE_WAY_SELECTOR']")
-            if not self.seleccionar_fechas(fecha_start, fecha_end):
-                logger.error("❌ No se pudo seleccionar la fecha")
-                return []
+            self.seleccionar_fechas(fecha_start, fecha_end):
+            logger.error("❌ No se pudo seleccionar la fecha")
+            return []
 
             # Buscar vuelos
             self.wait_and_click("[data-test-id='SUBMIT_SEARCH_BUTTON']")
