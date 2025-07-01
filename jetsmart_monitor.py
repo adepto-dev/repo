@@ -172,9 +172,10 @@ class JetSmartScraper:
                 logging.error(f"❌ No se pudo hacer click en el día {fecha_dia}: {e}")
     
         # 🟢 Lógica completa
+        self.save_screenshot("antes.png")
         self.abrir_calendario()
         time.sleep(1)  # Asegura renderizado
-        self.save_screenshot("antes_calendario.png")
+        self.save_screenshot("dsps.png")
         if self.avanzar_hasta_mes(fecha_salida):
             self.seleccionar_dia(fecha_salida)
             time.sleep(0.5)  # Esperar render nuevo calendario
