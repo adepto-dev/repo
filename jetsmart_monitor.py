@@ -117,7 +117,7 @@ class JetSmartScraper:
     #La función para seleccionar la fecha en el calendario es la 
     # que esta fallando ahora, tenemos que ver como se interactua y cambiar acorde
 
-    def seleccionar_fechas(driver, fecha_inicio: str, fecha_fin: str):
+    def seleccionar_fechas(driver, fecha_salida: str, fecha_regreso: str):
         wait = WebDriverWait(driver, 20)
     
         def abrir_calendario():
