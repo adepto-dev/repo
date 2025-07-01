@@ -221,9 +221,9 @@ class JetSmartScraper:
             logger.error(f"❌ Error cerrando popup de suscripción: {e}")
             self.save_screenshot("subscription_popup_error.png")
 
-    def search_flights(self, origen_code, origen_name, destino_code, destino_name, fecha):
+    def search_flights(self, origen_code, origen_name, destino_code, destino_name, fecha_start, fecha_end):
         try:
-            logger.info(f"🚀 Iniciando búsqueda: {origen_name} → {destino_name} para {fecha}")
+            logger.info(f"🚀 Iniciando búsqueda: {origen_name} → {destino_name} para {fecha_start+fecha_end}")
             self.driver.get("https://jetsmart.com/uy/es/")
             time.sleep(10)
             self.close_cookies_banner()
@@ -252,7 +252,7 @@ class JetSmartScraper:
 
             # Seleccionar la fecha (solo ida)
             self.wait_and_click("[data-test-id='DATE_ONE_WAY_SELECTOR']")
-            if not self.seleccionar_fecha_calendario(fecha):
+            if not self.seleccionar_fecha_calendario(fecha_start, fecha_end):
                 logger.error("❌ No se pudo seleccionar la fecha")
                 return []
 
