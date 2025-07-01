@@ -131,18 +131,33 @@ class JetSmartScraper:
         def avanzar_hasta_mes(fecha_objetivo: str):
             mes_objetivo = fecha_objetivo[:7]  # "YYYY-MM"
             max_intentos = 24
-            for i in range(max_intentos):
-                meses = driver.find_elements(By.CSS_SELECTOR, "[data-test-id='DATE_MONTH_NAME']")
-                for mes in meses:
-                    if mes.get_attribute("data-test-value") == mes_objetivo:
+        
+            for _ in range(max_intentos):
+                # Obtener todos los elementos visibles de mes actual
+                meses_visibles = driver.find_elements(By.CSS_SELECTOR, "[data-test-id='DATE_MONTH_NAME']")
+                for mes in meses_visibles:
+                    data_val = mes.get_attribute("data-test-value")
+                    if data_val == mes_objetivo:
                         logging.info(f"✅ Mes {mes_objetivo} visible")
                         return True
-                try:
-                    forward = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "[data-test-id='DATE_MOVE_FORWARD']")))
-                    forward.click()
-                    time.sleep(0.6)  # Esperar animación
-                except Exception as e:
-                    logging.error(f"❌ No se pudo avanzar el mes: {e}")
+        
+                # Buscar botón "forward" que no esté oculto
+                botones_forward = driver.find_elements(By.CSS_SELECTOR, "[data-test-id='DATE_MOVE_FORWARD']")
+                clicked = False
+                for boton in botones_forward:
+                    if boton.is_displayed() and boton.is_enabled():
+                        try:
+                            driver.execute_script("arguments[0].scrollIntoView(true);", boton)
+                            boton.click()
+                            logging.info("➡️ Avanzando un mes...")
+                            time.sleep(0.8)  # Esperar transición
+                            clicked = True
+                            break
+                        except Exception as e:
+                            logging.warning(f"⚠️ No se pudo hacer click en el botón forward: {e}")
+        
+                if not clicked:
+                    logging.error("❌ No se encontró botón visible para avanzar mes.")
                     break
             logging.warning(f"⚠️ No se encontró el mes {mes_objetivo}")
             return False
@@ -158,6 +173,7 @@ class JetSmartScraper:
     
         # 🟢 Lógica completa
         abrir_calendario()
+        driver.save_screenshot("antes_calendario.png")
         if avanzar_hasta_mes(fecha_inicio):
             seleccionar_dia(fecha_inicio)
             time.sleep(0.5)  # Esperar render nuevo calendario
