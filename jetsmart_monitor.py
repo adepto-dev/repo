@@ -118,73 +118,87 @@ class JetSmartScraper:
     # que esta fallando ahora, tenemos que ver como se interactua y cambiar acorde
 
     def seleccionar_fechas(self, fecha_salida: str, fecha_regreso: str):
-        print("🔍 ENTRÉ A seleccionar_fechas")
-        time.sleep(20)  # Asegura renderizado
-        logger.info(f"funciono entrar a la funcion?")
+        time.sleep(2)  # Asegura renderizado básico
+        logger.info("📅 Iniciando selección de fechas")
+    
         def abrir_calendario():
             try:
-                ida_y_vuelta_btn = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "[data-test-id='DATE_ONE_WAY_SELECTOR']")))
+                ida_y_vuelta_btn = self.wait.until(EC.element_to_be_clickable(
+                    (By.CSS_SELECTOR, "[data-test-id='DATE_ONE_WAY_SELECTOR']")))
                 ida_y_vuelta_btn.click()
-                logging.info("✅ Click en 'Solo Ida'")
+                logger.info("✅ Click en 'Solo Ida'")
+                time.sleep(1)
             except Exception as e:
-                logging.warning("⚠️ Calendario ya abierto o botón inaccesible: %s", e)
+                logger.warning("⚠️ Calendario ya abierto o botón inaccesible: %s", e)
     
         def avanzar_hasta_mes(fecha_objetivo: str):
             mes_objetivo = fecha_objetivo[:7]  # "YYYY-MM"
             max_intentos = 24
-        
-            for _ in range(max_intentos):
-                # Obtener todos los elementos visibles de mes actual
+    
+            for intento in range(max_intentos):
+                # Verificar si el mes deseado ya es visible
                 meses_visibles = self.driver.find_elements(By.CSS_SELECTOR, "[data-test-id='DATE_MONTH_NAME']")
                 for mes in meses_visibles:
-                    data_val = mes.get_attribute("data-test-value")
-                    if data_val == mes_objetivo:
-                        logging.info(f"✅ Mes {mes_objetivo} visible")
+                    if mes.get_attribute("data-test-value") == mes_objetivo:
+                        logger.info(f"✅ Mes {mes_objetivo} visible")
                         return True
-        
-                # Buscar botón "forward" que no esté oculto
+    
                 botones_forward = self.driver.find_elements(By.CSS_SELECTOR, "[data-test-id='DATE_MOVE_FORWARD']")
                 clicked = False
                 for boton in botones_forward:
                     if boton.is_displayed() and boton.is_enabled():
                         try:
                             self.driver.execute_script("arguments[0].scrollIntoView(true);", boton)
+                            time.sleep(0.3)
+    
+                            # Intentar ocultar elementos superpuestos
+                            self.driver.execute_script("""
+                                let el = document.querySelector('.menu-button.with-flag');
+                                if (el) el.style.display = 'none';
+                            """)
+    
+                            # Captura por intento (debug)
+                            self.driver.save_screenshot(f"debug_mes_{intento}.png")
+    
                             boton.click()
-                            logging.info("➡️ Avanzando un mes...")
-                            time.sleep(0.8)  # Esperar transición
+                            logger.info("➡️ Avanzando un mes...")
+                            time.sleep(0.8)
                             clicked = True
                             break
                         except Exception as e:
-                            logging.warning(f"⚠️ No se pudo hacer click en el botón forward: {e}")
-        
+                            logger.warning(f"⚠️ Error al avanzar mes: {e}")
+    
                 if not clicked:
-                    logging.error("❌ No se encontró botón visible para avanzar mes.")
+                    logger.error("❌ No se pudo hacer click en botón 'avanzar mes'")
                     break
-            logging.warning(f"⚠️ No se encontró el mes {mes_objetivo}")
+    
+            logger.warning(f"⚠️ No se encontró el mes {mes_objetivo}")
             return False
     
-        def seleccionar_dia(fecha_dia: str):
+        def seleccionar_dia(fecha: str):
             try:
-                dia = wait.until(EC.element_to_be_clickable(
-                    (By.CSS_SELECTOR, f"[data-test-id='DATE_DATE'][data-test-value='{fecha_dia}']")))
-                dia.click()
-                logger.info(f"✅ Fecha seleccionada: {fecha_dia}")
+                dia_elem = self.wait.until(EC.element_to_be_clickable(
+                    (By.CSS_SELECTOR, f"[data-test-id='DATE_DATE'][data-test-value='{fecha}']")))
+                dia_elem.click()
+                logger.info(f"✅ Día seleccionado: {fecha}")
             except Exception as e:
-                logger.error(f"❌ No se pudo hacer click en el día {fecha_dia}: {e}")
+                logger.error(f"❌ No se pudo seleccionar el día {fecha}: {e}")
+                self.save_screenshot("error_seleccionar_dia.png")
     
-        # 🟢 Lógica completa
-        logger.info(f"llegamos aca?")
-        self.save_screenshot("antes.png")
+        # 🟢 Lógica principal
         abrir_calendario()
-
-        time.sleep(1)  # Asegura renderizado
-        self.save_screenshot("dsps.png")
+        self.driver.save_screenshot("antes_calendario.png")
+    
         if avanzar_hasta_mes(fecha_salida):
             seleccionar_dia(fecha_salida)
-            time.sleep(0.5)  # Esperar render nuevo calendario
+            time.sleep(0.5)
+    
         if avanzar_hasta_mes(fecha_regreso):
             seleccionar_dia(fecha_regreso)
             time.sleep(0.5)
+    
+        self.driver.save_screenshot("despues_fechas.png")
+        return True
 
     def close_cookies_banner(self):
         try:
@@ -283,7 +297,8 @@ class JetSmartScraper:
                 logger.error("❌ No se pudo seleccionar el aeropuerto de destino")
                 return []
 
-            # Seleccionar las fechas            
+            # Seleccionar las fechas
+            time.sleep(15)
             self.seleccionar_fechas(fecha_start, fecha_end)
             logger.error("❌ No se pudo seleccionar la fecha")
             return []
