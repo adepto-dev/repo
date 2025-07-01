@@ -118,36 +118,56 @@ class JetSmartScraper:
     # que esta fallando ahora, tenemos que ver como se interactua y cambiar acorde
 
     def seleccionar_fecha_calendario(self, fecha_salida: str, fecha_regreso: str):
-        # Abrir el calendario (asume que ya está visible desde el paso anterior)
-        # Formato esperado: 'YYYY-MM-DD'
-
-        def esperar_elemento(locator):
-            return WebDriverWait(self, 10).until(EC.presence_of_element_located(locator))
-
-        def avanzar_mes_hasta(fecha_objetivo):
-            while True:
-                contenedor_mes = esperar_elemento((By.CSS_SELECTOR, "[data-test-id='DATE_MONTH_NAME']"))
-                valor_mes = contenedor_mes.get_attribute("data-test-value")
-                if valor_mes == fecha_objetivo.strftime('%Y-%m'):
-                    break
-                btn_forward = self.find_element(By.CSS_SELECTOR, "[data-test-id='DATE_MOVE_FORWARD']")
-                btn_forward.click()
-                time.sleep(0.8)  # Dar tiempo a que actualice
-
+        logging.info("🗓️ Seleccionando fechas...")
+        wait = WebDriverWait(driver, 10)
+    
+        # Asegurar que el calendario esté desplegado
+        try:
+            logging.info("🕒 Esperando a que el calendario se cargue...")
+            time.sleep(2)  # espera básica para animaciones
+            calendario_abierto = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "[data-test-id='DATE_MONTH_CONTAINER']")))
+        except TimeoutException:
+            logging.error("❌ El calendario no se abrió correctamente.")
+            return
+    
+        def mes_actual():
+            try:
+                return driver.find_element(By.CSS_SELECTOR, "[data-test-id='DATE_MONTH_NAME']").get_attribute("data-test-value")
+            except Exception:
+                return None
+    
+        def avanzar_mes():
+            try:
+                boton = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "[data-test-id='DATE_MOVE_FORWARD']")))
+                boton.click()
+                time.sleep(0.3)
+            except Exception:
+                logging.error("❌ No se pudo avanzar al siguiente mes")
+    
         def seleccionar_dia(fecha_str):
-            dia = datetime.strptime(fecha_str, "%Y-%m-%d").strftime("%Y-%m-%d")
-            xpath = f"//*[@data-test-id='DATE_DATE' and @data-test-value='{dia}']"
-            WebDriverWait(self, 10).until(EC.element_to_be_clickable((By.XPATH, xpath))).click()
-
+            try:
+                dia = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"[data-test-id='DATE_DATE'][data-test-value='{fecha_str}']")))
+                ActionChains(driver).move_to_element(dia).click().perform()
+                logging.info(f"✅ Fecha seleccionada: {fecha_str}")
+            except TimeoutException:
+                logging.error(f"❌ No se encontró o no se pudo hacer click en la fecha {fecha_str}")
+    
         try: 
-            fecha_inicio_dt = datetime.strptime(fecha_salida, "%Y-%m-%d")
-            fecha_regreso_dt = datetime.strptime(fecha_regreso, "%Y-%m-%d")
-
-            avanzar_mes_hasta(fecha_inicio_dt)
-            seleccionar_dia(fecha_salida)
-
-            avanzar_mes_hasta(fecha_regreso_dt)
-            seleccionar_dia(fecha_regreso)
+            fecha_inicio = datetime.strptime(fecha_ida, "%Y-%m-%d")
+            fecha_fin = datetime.strptime(fecha_vuelta, "%Y-%m-%d")
+            
+            # Avanzar hasta el mes de la fecha de ida
+            while mes_actual() and mes_actual() < fecha_ida[:7]:
+                avanzar_mes()
+        
+            seleccionar_dia(fecha_ida)
+        
+            # Avanzar hasta el mes de la fecha de vuelta si es necesario
+            while mes_actual() and mes_actual() < fecha_vuelta[:7]:
+                avanzar_mes()
+        
+            seleccionar_dia(fecha_vuelta)
+            time.sleep(1)
         except Exception as e:
             logger.error(f"❌ Error seleccionando fechas: {e}")
             self.save_screenshot("date_selection_error.png")
