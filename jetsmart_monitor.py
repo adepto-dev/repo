@@ -283,8 +283,7 @@ class JetSmartScraper:
                 logger.error("❌ No se pudo seleccionar el aeropuerto de destino")
                 return []
 
-            # Seleccionar la fecha (solo ida)
-            self.wait_and_click("[data-test-id='DATE_ONE_WAY_SELECTOR']")
+            # Seleccionar las fechas            
             self.seleccionar_fechas(fecha_start, fecha_end)
             logger.error("❌ No se pudo seleccionar la fecha")
             return []
