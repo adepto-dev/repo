@@ -223,7 +223,7 @@ class JetSmartScraper:
 
     def search_flights(self, origen_code, origen_name, destino_code, destino_name, fecha_start, fecha_end):
         try:
-            logger.info(f"🚀 Iniciando búsqueda: {origen_name} → {destino_name} para {fecha_start+fecha_end}")
+            logger.info(f"🚀 Iniciando búsqueda: {origen_name} → {destino_name} para vacaciones")
             self.driver.get("https://jetsmart.com/uy/es/")
             time.sleep(10)
             self.close_cookies_banner()
