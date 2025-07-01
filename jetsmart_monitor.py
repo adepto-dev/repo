@@ -132,46 +132,35 @@ class JetSmartScraper:
                 logger.warning("⚠️ Calendario ya abierto o botón inaccesible: %s", e)
     
         def avanzar_hasta_mes(fecha_objetivo: str):
-            mes_objetivo = fecha_objetivo[:7]  # "YYYY-MM"
+            mes_objetivo = fecha_objetivo[:7]
             max_intentos = 24
-    
-            for intento in range(max_intentos):
-                # Verificar si el mes deseado ya es visible
+        
+            for _ in range(max_intentos):
+                # Revisar si ya está el mes objetivo visible
                 meses_visibles = self.driver.find_elements(By.CSS_SELECTOR, "[data-test-id='DATE_MONTH_NAME']")
                 for mes in meses_visibles:
                     if mes.get_attribute("data-test-value") == mes_objetivo:
                         logger.info(f"✅ Mes {mes_objetivo} visible")
                         return True
-    
+        
+                # Buscar el botón de avanzar
                 botones_forward = self.driver.find_elements(By.CSS_SELECTOR, "[data-test-id='DATE_MOVE_FORWARD']")
-                clicked = False
                 for boton in botones_forward:
                     if boton.is_displayed() and boton.is_enabled():
                         try:
                             self.driver.execute_script("arguments[0].scrollIntoView(true);", boton)
-                            time.sleep(0.3)
-    
-                            # Intentar ocultar elementos superpuestos
-                            self.driver.execute_script("""
-                                let el = document.querySelector('.menu-button.with-flag');
-                                if (el) el.style.display = 'none';
-                            """)
-    
-                            # Captura por intento (debug)
-                            self.driver.save_screenshot(f"debug_mes_{intento}.png")
-    
-                            boton.click()
+                            # Acción directa con ActionChains para evitar intercepción
+                            ActionChains(self.driver).move_to_element(boton).pause(0.2).click().perform()
                             logger.info("➡️ Avanzando un mes...")
                             time.sleep(0.8)
-                            clicked = True
                             break
                         except Exception as e:
                             logger.warning(f"⚠️ Error al avanzar mes: {e}")
-    
-                if not clicked:
+                            return False
+                else:
                     logger.error("❌ No se pudo hacer click en botón 'avanzar mes'")
-                    break
-    
+                    return False
+        
             logger.warning(f"⚠️ No se encontró el mes {mes_objetivo}")
             return False
     
