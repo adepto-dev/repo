@@ -119,7 +119,7 @@ class JetSmartScraper:
 
     def seleccionar_fechas(self, fecha_salida: str, fecha_regreso: str):
         time.sleep(20)  # Asegura renderizado
-    
+        logger.info(f"funciono entrar a la funcion?")
         def abrir_calendario():
             try:
                 ida_y_vuelta_btn = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "[data-test-id='DATE_ONE_WAY_SELECTOR']")))
@@ -167,13 +167,15 @@ class JetSmartScraper:
                 dia = wait.until(EC.element_to_be_clickable(
                     (By.CSS_SELECTOR, f"[data-test-id='DATE_DATE'][data-test-value='{fecha_dia}']")))
                 dia.click()
-                logging.info(f"✅ Fecha seleccionada: {fecha_dia}")
+                logger.info(f"✅ Fecha seleccionada: {fecha_dia}")
             except Exception as e:
-                logging.error(f"❌ No se pudo hacer click en el día {fecha_dia}: {e}")
+                logger.error(f"❌ No se pudo hacer click en el día {fecha_dia}: {e}")
     
         # 🟢 Lógica completa
+        logger.info(f"llegamos aca?")
         self.save_screenshot("antes.png")
         self.abrir_calendario()
+
         time.sleep(1)  # Asegura renderizado
         self.save_screenshot("dsps.png")
         if self.avanzar_hasta_mes(fecha_salida):
