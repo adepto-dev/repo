@@ -240,13 +240,13 @@ class JetSmartScraper:
 
             # Hacer clic en el input de origen para activar el selector
             self.wait_and_click("[data-test-id='ROUTE_ORIGIN_INPUT']")
-            if not self.seleccionar_ciudad_por_codigo(origen_code):
+            if not self.seleccionar_ciudad_por_codigo("UY", origen_code):
                 logger.error("❌ No se pudo seleccionar el aeropuerto de origen")
                 return []
 
             # Hacer clic en el input de destino
             self.wait_and_click("[data-test-id='ROUTE_DESTINATION_INPUT']")
-            if not self.seleccionar_ciudad_por_codigo(destino_code):
+            if not self.seleccionar_ciudad_por_codigo("BR", destino_code):
                 logger.error("❌ No se pudo seleccionar el aeropuerto de destino")
                 return []
 
