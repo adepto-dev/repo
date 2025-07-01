@@ -152,6 +152,7 @@ class JetSmartScraper:
                             # Acción directa con ActionChains para evitar intercepción
                             ActionChains(self.driver).move_to_element(boton).pause(0.2).click().perform()
                             logger.info("➡️ Avanzando un mes...")
+                            self.save_screenshot("meses.png")
                             time.sleep(0.8)
                             break
                         except Exception as e:
