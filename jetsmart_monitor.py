@@ -174,11 +174,11 @@ class JetSmartScraper:
         # 🟢 Lógica completa
         abrir_calendario()
         driver.save_screenshot("antes_calendario.png")
-        if avanzar_hasta_mes(fecha_inicio):
-            seleccionar_dia(fecha_inicio)
+        if avanzar_hasta_mes(fecha_salida):
+            seleccionar_dia(fecha_salida)
             time.sleep(0.5)  # Esperar render nuevo calendario
-        if avanzar_hasta_mes(fecha_fin):
-            seleccionar_dia(fecha_fin)
+        if avanzar_hasta_mes(fecha_regreso):
+            seleccionar_dia(fecha_regreso)
             time.sleep(0.5)
 
 
