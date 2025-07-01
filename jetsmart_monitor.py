@@ -118,7 +118,7 @@ class JetSmartScraper:
     # que esta fallando ahora, tenemos que ver como se interactua y cambiar acorde
 
     def seleccionar_fechas(self, fecha_salida: str, fecha_regreso: str):
-       time.sleep(20)  # Asegura renderizado
+        time.sleep(20)  # Asegura renderizado
     
         def abrir_calendario():
             try:
