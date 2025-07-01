@@ -118,59 +118,51 @@ class JetSmartScraper:
     # que esta fallando ahora, tenemos que ver como se interactua y cambiar acorde
 
     def seleccionar_fechas(driver, fecha_inicio: str, fecha_fin: str):
-        wait = WebDriverWait(driver, 20)
-        fecha_inicio_dt = datetime.strptime(fecha_inicio, "%Y-%m-%d")
-        fecha_fin_dt = datetime.strptime(fecha_fin, "%Y-%m-%d")
+        wait = WebDriverWait(driver, 15)
     
-        # Abrimos el calendario si no está abierto
+        # Asegurarnos de abrir el calendario
         try:
             date_input = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "[data-test-id='DATE_ONE_WAY_SELECTOR']")))
             date_input.click()
-        except:
-            logging.warning("Ya se muestra el calendario o no se pudo hacer click.")
+        except Exception as e:
+            logging.warning("⚠️ Calendario ya visible o error al hacer click: %s", e)
     
-        # Esperamos a que aparezca el calendario
+        # Esperar a que cargue el calendario
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "[data-test-id='DATE_MONTH_CONTAINER']")))
     
-        # Función auxiliar para obtener todos los meses visibles
-        def get_visible_months():
-            return driver.find_elements(By.CSS_SELECTOR, "[data-test-id='DATE_MONTH_NAME']")
+        def avanzar_hasta_mes(fecha_target: str):
+            max_avances = 24
+            intentos = 0
+            while intentos < max_avances:
+                meses_visibles = driver.find_elements(By.CSS_SELECTOR, "[data-test-id='DATE_MONTH_NAME']")
+                if any(m.get_attribute("data-test-value") == fecha_target[:7] for m in meses_visibles):
+                    return
+                try:
+                    forward = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "[data-test-id='DATE_MOVE_FORWARD']")))
+                    forward.click()
+                    time.sleep(0.5)
+                    intentos += 1
+                except Exception as e:
+                    logging.error(f"❌ No se pudo avanzar el mes: {e}")
+                    break
+            logging.warning(f"⚠️ No se encontró el mes {fecha_target[:7]} tras {max_avances} avances")
     
-        def month_visible(fecha_dt):
-            visible_months = get_visible_months()
-            for month in visible_months:
-                valor = month.get_attribute("data-test-value")  # "2026-02"
-                if valor == fecha_dt.strftime("%Y-%m"):
-                    return True
-            return False
+        # Primero ir a mes de inicio y hacer click
+        avanzar_hasta_mes(fecha_inicio)
+        try:
+            dia_inicio = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"[data-test-id='DATE_DATE'][data-test-value='{fecha_inicio}']")))
+            dia_inicio.click()
+        except Exception as e:
+            logging.error(f"❌ No se pudo seleccionar fecha de inicio {fecha_inicio}: {e}")
     
-        # Ir avanzando hasta que estén visibles ambos meses
-        forward_btn = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "[data-test-id='DATE_MOVE_FORWARD']")))
-    
-        max_intentos = 24  # por si hay algún bug
-        intentos = 0
-        while (not month_visible(fecha_inicio_dt) or not month_visible(fecha_fin_dt)) and intentos < max_intentos:
-            try:
-                forward_btn.click()
-                time.sleep(0.5)  # para evitar que se saltee renders
-                intentos += 1
-            except Exception as e:
-                logging.error(f"❌ No se pudo avanzar el mes: {e}")
-                break
-    
-        if intentos == max_intentos:
-            logging.error("❌ No se pudo encontrar los meses deseados.")
-            return
-    
-        # Hacemos clic en las fechas
-        for fecha in [fecha_inicio, fecha_fin]:
-            try:
-                fecha_element = wait.until(
-                    EC.element_to_be_clickable((By.CSS_SELECTOR, f"[data-test-id='DATE_DATE'][data-test-value='{fecha}']"))
-                )
-                fecha_element.click()
-            except Exception as e:
-                logging.error(f"❌ Error seleccionando la fecha {fecha}: {e}")
+        # Luego ir a mes de fin y hacer click
+        avanzar_hasta_mes(fecha_fin)
+        try:
+            dia_fin = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"[data-test-id='DATE_DATE'][data-test-value='{fecha_fin}']")))
+            dia_fin.click()
+        except Exception as e:
+            logging.error(f"❌ No se pudo seleccionar fecha de fin {fecha_fin}: {e}")
+
 
 
     def close_cookies_banner(self):
@@ -303,8 +295,8 @@ def main():
     }
     scraper = JetSmartScraper()
     try:
-        fecha_start = datetime.strptime(config['fecha_inicio'], "%Y-%m-%d")
-        fecha_end = datetime.strptime(config['fecha_fin'], "%Y-%m-%d")
+        fecha_start = "2026-02-13"
+        fecha_end = "2026-02-21"
         all_flights = []
         flights = scraper.search_flights(
             config['origen_code'], config['origen_name'],
