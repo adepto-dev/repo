@@ -118,7 +118,7 @@ class JetSmartScraper:
     # que esta fallando ahora, tenemos que ver como se interactua y cambiar acorde
 
     def seleccionar_fechas(self, fecha_salida: str, fecha_regreso: str):
-        wait = WebDriverWait(self, 20)
+       time.sleep(20)  # Asegura renderizado
     
         def abrir_calendario():
             try:
@@ -173,6 +173,7 @@ class JetSmartScraper:
     
         # 🟢 Lógica completa
         self.abrir_calendario()
+        time.sleep(1)  # Asegura renderizado
         self.save_screenshot("antes_calendario.png")
         if self.avanzar_hasta_mes(fecha_salida):
             self.seleccionar_dia(fecha_salida)
