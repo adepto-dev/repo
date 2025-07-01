@@ -175,15 +175,15 @@ class JetSmartScraper:
         # 🟢 Lógica completa
         logger.info(f"llegamos aca?")
         self.save_screenshot("antes.png")
-        self.abrir_calendario()
+        abrir_calendario()
 
         time.sleep(1)  # Asegura renderizado
         self.save_screenshot("dsps.png")
-        if self.avanzar_hasta_mes(fecha_salida):
-            self.seleccionar_dia(fecha_salida)
+        if avanzar_hasta_mes(fecha_salida):
+            seleccionar_dia(fecha_salida)
             time.sleep(0.5)  # Esperar render nuevo calendario
-        if self.avanzar_hasta_mes(fecha_regreso):
-            self.seleccionar_dia(fecha_regreso)
+        if avanzar_hasta_mes(fecha_regreso):
+            seleccionar_dia(fecha_regreso)
             time.sleep(0.5)
 
     def close_cookies_banner(self):
