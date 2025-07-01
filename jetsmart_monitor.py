@@ -173,7 +173,7 @@ class JetSmartScraper:
     
         # 🟢 Lógica completa
         abrir_calendario()
-        driver.save_screenshot("antes_calendario.png")
+        driver.driver.save_screenshot("antes_calendario.png")
         if avanzar_hasta_mes(fecha_salida):
             seleccionar_dia(fecha_salida)
             time.sleep(0.5)  # Esperar render nuevo calendario
