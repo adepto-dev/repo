@@ -22,70 +22,6 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 class JetSmartScraper:
-    def seleccionar_ciudad_por_codigo(self, codigo_pais, codigo_ciudad):
-        # Espera y selecciona el país correcto
-        country_selector = f"ul[data-test-id='ROUTE_COUNTRY_LIST'] li[data-test-value='{codigo_pais.upper()}']"
-        self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, country_selector)))
-        country_elem = self.driver.find_element(By.CSS_SELECTOR, country_selector)
-        self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", country_elem)
-        country_elem.click()
-        time.sleep(10)
-
-        # Espera a que la lista de ciudades esté visible
-        city_list_selector = "ul[data-test-id='ROUTE_CITY_LIST'] li[data-test-id*='ROUTE_CITY_LIST_ITEM']"
-        self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, city_list_selector)))
-        cities = self.driver.find_elements(By.CSS_SELECTOR, city_list_selector)
-
-        if len(cities) == 1:
-            # Si solo hay una ciudad, haz click directo
-            city = cities[0]
-            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", city)
-            city.click()
-            logger.info(f"✅ Ciudad seleccionada automáticamente: {city.text}")
-            self.save_screenshot(f"city_selected_{codigo_ciudad}.png")
-            return True
-
-        # Si hay varias, busca la correcta
-        for city in cities:
-            if codigo_ciudad.upper() == city.get_attribute("data-test-value").upper() or city.text.lower() in city.text.lower():
-                self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", city)
-                city.click()
-                logger.info(f"✅ Ciudad seleccionada: {city.text} ({codigo_ciudad})")
-                self.save_screenshot(f"city_selected_{codigo_ciudad}.png")
-                return True
-
-        logger.warning(f"⚠️ Ciudad no encontrada: {city.text} ({codigo_ciudad})")
-        self.save_screenshot(f"city_not_found_{codigo_ciudad}.png")
-        return False
-
-    def seleccionar_fecha_calendario(self, fecha_str):
-        try:
-            fecha_obj = datetime.strptime(fecha_str, "%Y-%m-%d")
-            mes_esperado = fecha_obj.strftime("%B").lower()
-            año_esperado = str(fecha_obj.year)
-            dia = fecha_obj.day
-
-            self.wait_and_click("[data-test-id='DATE_DEPARTURE_INPUT']")
-            for _ in range(12):
-                header = self.driver.find_element(By.CSS_SELECTOR, ".dg-calendar .month-label")
-                if mes_esperado[:3] in header.text.lower() and año_esperado in header.text:
-                    break
-                self.driver.find_element(By.CSS_SELECTOR, ".dg-calendar .next-month").click()
-                time.sleep(0.5)
-
-            dias = self.driver.find_elements(By.CSS_SELECTOR, f"[data-day='{dia}']:not(.disabled)")
-            for d in dias:
-                if d.is_displayed():
-                    d.click()
-                    logger.info(f"✅ Fecha seleccionada: {fecha_str}")
-                    return True
-            logger.warning(f"⚠️ Día {dia} no seleccionable en calendario")
-            return False
-        except Exception as e:
-            logger.error(f"❌ Error seleccionando fecha {fecha_str}: {e}")
-            self.save_screenshot(f"calendario_error_{fecha_str}.png")
-            return False
-
     def __init__(self):
         self.driver = None
         self.wait = None
@@ -142,51 +78,79 @@ class JetSmartScraper:
             self.save_screenshot("click_error.png")
             raise
 
-    def select_airport(self, input_selector, country_code, city_code, country_name, city_name):
-        try:
-            # Espera a que el input esté clickeable y remueve readonly si existe
-            self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, input_selector)))
-            input_elem = self.driver.find_element(By.CSS_SELECTOR, input_selector)
-            self.driver.execute_script("arguments[0].removeAttribute('readonly');", input_elem)
-            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", input_elem)
-            self.driver.execute_script("arguments[0].click();", input_elem)
-            time.sleep(1)
-            self.save_screenshot(f"after_click_{city_code}.png")
+    def seleccionar_ciudad_por_codigo(self, codigo_pais, codigo_ciudad):
+        # Espera y selecciona el país correcto
+        country_selector = f"ul[data-test-id='ROUTE_COUNTRY_LIST'] li[data-test-value='{codigo_pais.upper()}']"
+        self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, country_selector)))
+        country_elem = self.driver.find_element(By.CSS_SELECTOR, country_selector)
+        self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", country_elem)
+        country_elem.click()
+        time.sleep(10)
 
-            # Espera a que la lista de países esté visible
-            country_list_selector = "ul[data-test-id='ROUTE_COUNTRY_LIST'] li[data-test-value]"
-            self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, country_list_selector)))
-            countries = self.driver.find_elements(By.CSS_SELECTOR, country_list_selector)
-            found_country = False
-            for c in countries:
-                if country_code.upper() == c.get_attribute("data-test-value").upper() or country_name.lower() in c.text.lower():
-                    self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", c)
-                    c.click()
-                    found_country = True
+        # Espera a que la lista de ciudades esté visible
+        city_list_selector = "ul[data-test-id='ROUTE_CITY_LIST'] li[data-test-id*='ROUTE_CITY_LIST_ITEM']"
+        self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, city_list_selector)))
+        cities = self.driver.find_elements(By.CSS_SELECTOR, city_list_selector)
+
+        if len(cities) == 1:
+            # Si solo hay una ciudad, haz click directo
+            city = cities[0]
+            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", city)
+            city.click()
+            logger.info(f"✅ Ciudad seleccionada automáticamente: {city.text}")
+            self.save_screenshot(f"city_selected_{codigo_ciudad}.png")
+            return True
+
+        # Si hay varias, busca la correcta
+        for city in cities:
+            if codigo_ciudad.upper() == city.get_attribute("data-test-value").upper() or city.text.lower() in city.text.lower():
+                self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", city)
+                city.click()
+                logger.info(f"✅ Ciudad seleccionada: {city.text} ({codigo_ciudad})")
+                self.save_screenshot(f"city_selected_{codigo_ciudad}.png")
+                return True
+
+        logger.warning(f"⚠️ Ciudad no encontrada: {city.text} ({codigo_ciudad})")
+        self.save_screenshot(f"city_not_found_{codigo_ciudad}.png")
+        return False
+    
+    #La función para seleccionar la fecha en el calendario es la 
+    # que esta fallando ahora, tenemos que ver como se interactua y cambiar acorde
+
+    def seleccionar_fecha_calendario(self, fecha_salida: str, fecha_regreso: str):
+        # Abrir el calendario (asume que ya está visible desde el paso anterior)
+        # Formato esperado: 'YYYY-MM-DD'
+
+        def esperar_elemento(locator):
+            return WebDriverWait(self, 10).until(EC.presence_of_element_located(locator))
+
+        def avanzar_mes_hasta(fecha_objetivo):
+            while True:
+                contenedor_mes = esperar_elemento((By.CSS_SELECTOR, "[data-test-id='DATE_MONTH_NAME']"))
+                valor_mes = contenedor_mes.get_attribute("data-test-value")
+                if valor_mes == fecha_objetivo.strftime('%Y-%m'):
                     break
-            if not found_country:
-                logger.warning(f"⚠️ País no encontrado: {country_name} ({country_code})")
-                self.save_screenshot(f"country_not_found_{country_code}.png")
-                return False
-            time.sleep(1)
+                btn_forward = self.find_element(By.CSS_SELECTOR, "[data-test-id='DATE_MOVE_FORWARD']")
+                btn_forward.click()
+                time.sleep(0.8)  # Dar tiempo a que actualice
 
-            # Espera a que la lista de ciudades esté visible
-            city_list_selector = "ul[data-test-id='ROUTE_CITY_LIST'] li[data-test-id*='ROUTE_CITY_LIST_ITEM']"
-            self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, city_list_selector)))
-            cities = self.driver.find_elements(By.CSS_SELECTOR, city_list_selector)
-            for city in cities:
-                if city_code.upper() == city.get_attribute("data-test-value").upper() or city_name.lower() in city.text.lower():
-                    self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", city)
-                    city.click()
-                    logger.info(f"✅ Ciudad seleccionada: {city_name} ({city_code})")
-                    self.save_screenshot(f"city_selected_{city_code}.png")
-                    return True
-            logger.warning(f"⚠️ Ciudad no encontrada: {city_name} ({city_code})")
-            self.save_screenshot(f"city_not_found_{city_code}.png")
-            return False
+        def seleccionar_dia(fecha_str):
+            dia = datetime.strptime(fecha_str, "%Y-%m-%d").strftime("%Y-%m-%d")
+            xpath = f"//*[@data-test-id='DATE_DATE' and @data-test-value='{dia}']"
+            WebDriverWait(self, 10).until(EC.element_to_be_clickable((By.XPATH, xpath))).click()
+
+        try: 
+            fecha_inicio_dt = datetime.strptime(fecha_salida, "%Y-%m-%d")
+            fecha_regreso_dt = datetime.strptime(fecha_regreso, "%Y-%m-%d")
+
+            avanzar_mes_hasta(fecha_inicio_dt)
+            seleccionar_dia(fecha_salida)
+
+            avanzar_mes_hasta(fecha_regreso_dt)
+            seleccionar_dia(fecha_regreso)
         except Exception as e:
-            logger.error(f"❌ Error seleccionando aeropuerto {city_name}: {e}")
-            self.save_screenshot(f"airport_error_{city_code}.png")
+            logger.error(f"❌ Error seleccionando fechas: {e}")
+            self.save_screenshot("date_selection_error.png")
             return False
 
     def close_cookies_banner(self):
@@ -256,24 +220,6 @@ class JetSmartScraper:
         except Exception as e:
             logger.error(f"❌ Error cerrando popup de suscripción: {e}")
             self.save_screenshot("subscription_popup_error.png")
-            
-    def select_date(self, date_str):
-        try:
-            # Click en el input de fecha de ida
-            self.wait_and_click("[data-test-id='DATE_DEPARTURE_INPUT']")
-            time.sleep(1)
-            # Buscar el día en el calendario
-            selector = f"button[data-date='{date_str}']"
-            self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
-            day_btn = self.driver.find_element(By.CSS_SELECTOR, selector)
-            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", day_btn)
-            day_btn.click()
-            logger.info(f"✅ Fecha seleccionada: {date_str}")
-            return True
-        except Exception as e:
-            logger.error(f"❌ Error seleccionando fecha {date_str}: {e}")
-            self.save_screenshot(f"date_error_{date_str}.png")
-            return False
 
     def search_flights(self, origen_code, origen_name, destino_code, destino_name, fecha):
         try:
@@ -294,13 +240,13 @@ class JetSmartScraper:
 
             # Hacer clic en el input de origen para activar el selector
             self.wait_and_click("[data-test-id='ROUTE_ORIGIN_INPUT']")
-            if not self.seleccionar_ciudad_por_codigo('UY', origen_code):
+            if not self.seleccionar_ciudad_por_codigo(origen_code):
                 logger.error("❌ No se pudo seleccionar el aeropuerto de origen")
                 return []
 
             # Hacer clic en el input de destino
             self.wait_and_click("[data-test-id='ROUTE_DESTINATION_INPUT']")
-            if not self.seleccionar_ciudad_por_codigo('BR', destino_code):
+            if not self.seleccionar_ciudad_por_codigo(destino_code):
                 logger.error("❌ No se pudo seleccionar el aeropuerto de destino")
                 return []
 
@@ -321,9 +267,9 @@ class JetSmartScraper:
             return []
 
     def close(self):
-            if self.driver:
-                self.driver.quit()
-                logger.info("🔒 Driver cerrado")
+        if self.driver:
+            self.driver.quit()
+            logger.info("🔒 Driver cerrado")
 
 def main():
     config = {
@@ -339,18 +285,14 @@ def main():
     try:
         fecha_start = datetime.strptime(config['fecha_inicio'], "%Y-%m-%d")
         fecha_end = datetime.strptime(config['fecha_fin'], "%Y-%m-%d")
-        current_date = fecha_start
         all_flights = []
-        while current_date <= fecha_end:
-            fecha_str = current_date.strftime("%Y-%m-%d")
-            flights = scraper.search_flights(
-                config['origen_code'], config['origen_name'],
-                config['destino_code'], config['destino_name'],
-                fecha_str
-            )
-            all_flights.extend(flights)
-            current_date += timedelta(days=1)
-            time.sleep(5)
+        flights = scraper.search_flights(
+            config['origen_code'], config['origen_name'],
+            config['destino_code'], config['destino_name'],
+            fecha_start,
+            fecha_end
+        )
+        all_flights.extend(flights)
         if all_flights:
             scraper.send_discord_notification(all_flights, config['precio_max'])
         else:
