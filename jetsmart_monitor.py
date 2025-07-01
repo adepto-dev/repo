@@ -124,7 +124,7 @@ class JetSmartScraper:
         # Asegurar que el calendario esté desplegado
         try:
             logging.info("🕒 Esperando a que el calendario se cargue...")
-            time.sleep(2)  # espera básica para animaciones
+            time.sleep(10)  # espera básica para animaciones
             calendario_abierto = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "[data-test-id='DATE_MONTH_CONTAINER']")))
         except TimeoutException:
             logging.error("❌ El calendario no se abrió correctamente.")
