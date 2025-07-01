@@ -118,50 +118,52 @@ class JetSmartScraper:
     # que esta fallando ahora, tenemos que ver como se interactua y cambiar acorde
 
     def seleccionar_fechas(driver, fecha_inicio: str, fecha_fin: str):
-        wait = WebDriverWait(driver, 15)
+        wait = WebDriverWait(driver, 20)
     
-        # Asegurarnos de abrir el calendario
-        try:
-            date_input = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "[data-test-id='DATE_ONE_WAY_SELECTOR']")))
-            date_input.click()
-        except Exception as e:
-            logging.warning("⚠️ Calendario ya visible o error al hacer click: %s", e)
+        def abrir_calendario():
+            try:
+                ida_y_vuelta_btn = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "[data-test-id='DATE_ONE_WAY_SELECTOR']")))
+                ida_y_vuelta_btn.click()
+                logging.info("✅ Click en 'Solo Ida'")
+            except Exception as e:
+                logging.warning("⚠️ Calendario ya abierto o botón inaccesible: %s", e)
     
-        # Esperar a que cargue el calendario
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "[data-test-id='DATE_MONTH_CONTAINER']")))
-    
-        def avanzar_hasta_mes(fecha_target: str):
-            max_avances = 24
-            intentos = 0
-            while intentos < max_avances:
-                meses_visibles = driver.find_elements(By.CSS_SELECTOR, "[data-test-id='DATE_MONTH_NAME']")
-                if any(m.get_attribute("data-test-value") == fecha_target[:7] for m in meses_visibles):
-                    return
+        def avanzar_hasta_mes(fecha_objetivo: str):
+            mes_objetivo = fecha_objetivo[:7]  # "YYYY-MM"
+            max_intentos = 24
+            for i in range(max_intentos):
+                meses = driver.find_elements(By.CSS_SELECTOR, "[data-test-id='DATE_MONTH_NAME']")
+                for mes in meses:
+                    if mes.get_attribute("data-test-value") == mes_objetivo:
+                        logging.info(f"✅ Mes {mes_objetivo} visible")
+                        return True
                 try:
                     forward = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "[data-test-id='DATE_MOVE_FORWARD']")))
                     forward.click()
-                    time.sleep(0.5)
-                    intentos += 1
+                    time.sleep(0.6)  # Esperar animación
                 except Exception as e:
                     logging.error(f"❌ No se pudo avanzar el mes: {e}")
                     break
-            logging.warning(f"⚠️ No se encontró el mes {fecha_target[:7]} tras {max_avances} avances")
+            logging.warning(f"⚠️ No se encontró el mes {mes_objetivo}")
+            return False
     
-        # Primero ir a mes de inicio y hacer click
-        avanzar_hasta_mes(fecha_inicio)
-        try:
-            dia_inicio = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"[data-test-id='DATE_DATE'][data-test-value='{fecha_inicio}']")))
-            dia_inicio.click()
-        except Exception as e:
-            logging.error(f"❌ No se pudo seleccionar fecha de inicio {fecha_inicio}: {e}")
+        def seleccionar_dia(fecha_dia: str):
+            try:
+                dia = wait.until(EC.element_to_be_clickable(
+                    (By.CSS_SELECTOR, f"[data-test-id='DATE_DATE'][data-test-value='{fecha_dia}']")))
+                dia.click()
+                logging.info(f"✅ Fecha seleccionada: {fecha_dia}")
+            except Exception as e:
+                logging.error(f"❌ No se pudo hacer click en el día {fecha_dia}: {e}")
     
-        # Luego ir a mes de fin y hacer click
-        avanzar_hasta_mes(fecha_fin)
-        try:
-            dia_fin = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, f"[data-test-id='DATE_DATE'][data-test-value='{fecha_fin}']")))
-            dia_fin.click()
-        except Exception as e:
-            logging.error(f"❌ No se pudo seleccionar fecha de fin {fecha_fin}: {e}")
+        # 🟢 Lógica completa
+        abrir_calendario()
+        if avanzar_hasta_mes(fecha_inicio):
+            seleccionar_dia(fecha_inicio)
+            time.sleep(0.5)  # Esperar render nuevo calendario
+        if avanzar_hasta_mes(fecha_fin):
+            seleccionar_dia(fecha_fin)
+            time.sleep(0.5)
 
 
 
