@@ -282,7 +282,7 @@ class JetSmartScraper:
 
             # Seleccionar la fecha (solo ida)
             self.wait_and_click("[data-test-id='DATE_ONE_WAY_SELECTOR']")
-            if not self.seleccionar_fecha_calendario(fecha_start, fecha_end):
+            if not self.seleccionar_fechas(fecha_start, fecha_end):
                 logger.error("❌ No se pudo seleccionar la fecha")
                 return []
 
