@@ -410,7 +410,7 @@ class JetSmartScraper:
             try:
                 self.save_screenshot(f"antes_calendario_alternativo_{tipo}.png")
                 btn_otras_fechas = self.wait.until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, "span.otherDatesText"))
+                    EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'BUSCA OTRAS FECHAS')]"))
                 )
                 if btn_otras_fechas.is_displayed():
                     self.driver.execute_script("arguments[0].click();", btn_otras_fechas)
