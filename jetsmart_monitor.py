@@ -34,7 +34,34 @@ class JetSmartScraper:
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--window-size=1920,1080")
-        chrome_options.add_argument("--user-agent=Mozilla/5.0")
+
+        # User agents rotativos más realistas
+        user_agents = [
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        ]
+        chrome_options.add_argument(f"--user-agent={random.choice(user_agents)}")
+        
+        # Desactivar características que delatan automatización
+        chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        chrome_options.add_experimental_option('useAutomationExtension', False)
+        
+        # Headers adicionales
+        chrome_options.add_argument("--disable-web-security")
+        chrome_options.add_argument("--allow-running-insecure-content")
+        chrome_options.add_argument("--disable-features=VizDisplayCompositor")
+        
+        # Simular preferencias de navegador real
+        prefs = {
+            "profile.default_content_setting_values.notifications": 2,
+            "profile.default_content_settings.popups": 0,
+            "profile.managed_default_content_settings.images": 2,  # No cargar imágenes para ser más rápido
+            "profile.default_content_setting_values.geolocation": 2
+        }
+        chrome_options.add_experimental_option("prefs", prefs)
 
         # Detectar binarios de Chromium y ChromeDriver
         chromium_path = shutil.which("chromium-browser") or shutil.which("chromium")
@@ -78,8 +105,28 @@ class JetSmartScraper:
             self.save_screenshot("click_error.png")
             raise
 
+    def human_like_delay(self, min_delay=1, max_delay=3):
+        """Simula delays humanos aleatorios"""
+        delay = random.uniform(min_delay, max_delay)
+        time.sleep(delay)
+
+    def simulate_human_mouse_movement(self):
+        """Simula movimientos de mouse humanos"""
+        try:
+            action = ActionChains(self.driver)
+            # Movimientos aleatorios
+            for _ in range(random.randint(2, 5)):
+                x = random.randint(100, 800)
+                y = random.randint(100, 600)
+                action.move_by_offset(x, y)
+            action.perform()
+        except Exception as e:
+            logger.warning(f"⚠️ Error simulando movimiento de mouse: {e}")
+
+    
     def seleccionar_ciudad_por_codigo(self, codigo_pais, codigo_ciudad):
         # Espera y selecciona el país correcto
+        self.human_like_delay(1, 2)
         country_selector = f"ul[data-test-id='ROUTE_COUNTRY_LIST'] li[data-test-value='{codigo_pais.upper()}']"
         self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, country_selector)))
         country_elem = self.driver.find_element(By.CSS_SELECTOR, country_selector)
@@ -91,7 +138,7 @@ class JetSmartScraper:
         city_list_selector = "ul[data-test-id='ROUTE_CITY_LIST'] li[data-test-id*='ROUTE_CITY_LIST_ITEM']"
         self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, city_list_selector)))
         cities = self.driver.find_elements(By.CSS_SELECTOR, city_list_selector)
-
+        self.human_like_delay(0.5, 1.0)
         if len(cities) == 1:
             # Si solo hay una ciudad, haz click directo
             city = cities[0]
@@ -119,6 +166,7 @@ class JetSmartScraper:
 
     def seleccionar_fechas(self, fecha_salida: str, fecha_regreso: str):
         time.sleep(2)  # Asegura renderizado básico
+        self.human_like_delay(2, 4)
         logger.info("📅 Iniciando selección de fechas")
     
         def abrir_calendario():
@@ -283,6 +331,9 @@ class JetSmartScraper:
             except:
                 pass
 
+            self.simulate_human_mouse_movement()
+            self.human_like_delay(1, 3)
+            
             # Hacer clic en el input de origen para activar el selector
             self.wait_and_click("[data-test-id='ROUTE_ORIGIN_INPUT']")
             if not self.seleccionar_ciudad_por_codigo("UY", origen_code):
@@ -290,6 +341,7 @@ class JetSmartScraper:
                 return []
 
             # Hacer clic en el input de destino
+            self.human_like_delay(3, 5)
             self.wait_and_click("[data-test-id='ROUTE_DESTINATION_INPUT']")
             if not self.seleccionar_ciudad_por_codigo("BR", destino_code):
                 logger.error("❌ No se pudo seleccionar el aeropuerto de destino")
@@ -300,7 +352,7 @@ class JetSmartScraper:
             self.seleccionar_fechas(fecha_start, fecha_end)
             self.save_screenshot("fechas_seleccionadas.png")
             time.sleep(2)
-            
+            self.human_like_delay(2, 4)
             # Buscar vuelos
             self.wait_and_click("[data-test-id='SUBMIT_SEARCH_BUTTON']")
             logger.info("🔍 Esperando resultados...")
