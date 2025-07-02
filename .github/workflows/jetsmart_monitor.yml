@@ -50,26 +50,10 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Instalar Google Chrome
+    - name: Instalar Chromium y ChromeDriver
       run: |
-        # Usar método moderno para importar claves
-        sudo mkdir -p /etc/apt/keyrings
-        curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /etc/apt/keyrings/google.gpg
-        echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/google.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
-
-        wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-        sudo apt-get update
-        sudo apt install -y ./google-chrome-stable_current_amd64.deb
-        echo "CHROME_BIN=$(which google-chrome)" >> $GITHUB_ENV
-
-    - name: Instalar Chromium sin Snap (Debian repos)
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y wget gnupg
-        echo 'deb http://deb.debian.org/debian sid main' | sudo tee -a /etc/apt/sources.list
-        sudo apt-get update
-        sudo apt-get install -y chromium chromium-driver
-        echo "CHROME_BIN=$(which chromium)" >> $GITHUB_ENV
+        sudo apt update
+        sudo apt install -y chromium-browser chromium-chromedriver
 
     - name: Install Python dependencies
       run: |
