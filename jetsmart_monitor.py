@@ -29,6 +29,7 @@ class JetSmartScraper:
 
     def setup_driver(self):
         chrome_options = Options()
+        chrome_options.binary_location = os.getenv("CHROME_BIN", "/usr/bin/chromium")
         chrome_options.add_argument("--headless")  # Headless moderno
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
