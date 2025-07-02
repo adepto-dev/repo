@@ -298,9 +298,9 @@ class JetSmartScraper:
             # Seleccionar las fechas
             time.sleep(15)
             self.seleccionar_fechas(fecha_start, fecha_end)
-            logger.error("❌ No se pudo seleccionar la fecha")
-            return []
-
+            self.save_screenshot("fechas_seleccionadas.png")
+            time.sleep(2)
+            
             # Buscar vuelos
             self.wait_and_click("[data-test-id='SUBMIT_SEARCH_BUTTON']")
             logger.info("🔍 Esperando resultados...")
