@@ -311,6 +311,92 @@ class JetSmartScraper:
             self.save_screenshot("search_flights_error.png")
             return []
 
+    def extract_flight_results(self, origen_code, destino_code):
+        vuelos = []
+
+        for idx in [0, 1]:  # 0: Ida, 1: Vuelta
+            tipo = "ida" if idx == 0 else "vuelta"
+            try:
+                # Verificar que existan resultados
+                contenedor = self.wait.until(EC.presence_of_element_located(
+                    (By.CSS_SELECTOR, f"[data-test-id='flight-header--j|{idx}']")
+                ))
+
+                tarjetas = self.driver.find_elements(By.CSS_SELECTOR, f"[data-test-id^='flight-fee-option--j|{idx}-i|']")
+                for tarjeta in tarjetas:
+                    try:
+                        info = tarjeta.find_element(By.CSS_SELECTOR, f"[data-test-id^='flight-flight-info--j|{idx}-i|']")
+                        origen = info.find_element(By.CSS_SELECTOR, f"[data-test-id='flight-flight-info-origin--j|{idx}'] .itinerary-station-name").text.strip()
+                        hora_salida = info.find_element(By.CSS_SELECTOR, f"[data-test-id='flight-flight-info-origin--j|{idx}'] .itinerary-flight-time").text.strip()
+                        destino = info.find_element(By.CSS_SELECTOR, f"[data-test-id='flight-flight-info-destination--j|{idx}'] .itinerary-station-name").text.strip()
+                        hora_llegada = info.find_element(By.CSS_SELECTOR, f"[data-test-id='flight-flight-info-destination--j|{idx}'] .itinerary-flight-time").text.strip()
+
+                        # Precio SMART
+                        precio_smart = tarjeta.find_element(By.CSS_SELECTOR, f"[data-test-id='flight-smart-fee--j|{idx}-i|0']").get_attribute("data-value")
+
+                        # Precio Club (opcional)
+                        try:
+                            precio_club = tarjeta.find_element(By.CSS_SELECTOR, f"[data-test-id='flight-club-fee--j|{idx}-i|0']").get_attribute("data-value")
+                        except:
+                            precio_club = None
+
+                        vuelos.append({
+                            "tipo": tipo,
+                            "origen": origen,
+                            "destino": destino,
+                            "hora_salida": hora_salida,
+                            "hora_llegada": hora_llegada,
+                            "precio_smart": float(precio_smart),
+                            "precio_club": float(precio_club) if precio_club else None,
+                        })
+                    except Exception as e:
+                        logger.warning(f"⚠️ Error al extraer tarjeta de vuelo {tipo}: {e}")
+            except Exception as e:
+                logger.warning(f"⚠️ No se encontraron resultados para {tipo}: {e}")
+
+        logger.info(f"✈️ Se extrajeron {len(vuelos)} vuelos")
+        return vuelos
+
+    def send_discord_notification(self, flights, precio_max):
+        if not flights:
+            logger.info("😞 No hay vuelos para notificar")
+            return
+
+        url = os.getenv('DISCORD_WEBHOOK_URL')
+        if not url:
+            logger.error("❌ No se ha configurado el webhook de Discord")
+            return
+
+        embed = {
+            "title": "✈️ Vuelos encontrados",
+            "description": f"Se encontraron {len(flights)} vuelos desde {flights[0]['origen']} a {flights[0]['destino']}",
+            "color": 5814783,
+            "fields": []
+        }
+
+        for flight in flights:
+            if flight['precio_smart'] <= precio_max:
+                embed["fields"].append({
+                    "name": f"{flight['tipo'].capitalize()} - {flight['origen']} → {flight['destino']}",
+                    "value": f"Hora: {flight['hora_salida']} - {flight['hora_llegada']}\n"
+                             f"Precio SMART: ${flight['precio_smart']:.2f}\n"
+                             f"Precio CLUB: ${flight['precio_club']:.2f}" if flight['precio_club'] else "",
+                    "inline": False
+                })
+
+        data = {
+            "embeds": [embed]
+        }
+
+        try:
+            response = requests.post(url, json=data)
+            if response.status_code == 204:
+                logger.info("✅ Notificación enviada a Discord")
+            else:
+                logger.error(f"❌ Error al enviar notificación a Discord: {response.status_code} - {response.text}")
+        except Exception as e:
+            logger.error(f"❌ Error enviando notificación a Discord: {e}")
+
     def close(self):
         if self.driver:
             self.driver.quit()
