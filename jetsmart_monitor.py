@@ -357,23 +357,25 @@ class JetSmartScraper:
             # Buscar vuelos
             self.wait_and_click("[data-test-id='SUBMIT_SEARCH_BUTTON']")
             logger.info("🔍 Esperando resultados...")
+            fechas_ida = ["2026-02-12", "2026-02-14", "2026-02-15"]
+            fechas_vuelta = ["2026-02-22", "2026-02-23", "2026-02-24"]
             self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "[data-test-id*='flight']")))
-            return self.extract_flight_results(fecha_start, fecha_end)
+            return self.extract_flight_results(fecha_start, fecha_end, fechas_ida, fechas_vuelta)
         except Exception as e:
             logger.error(f"❌ Error en búsqueda de vuelos: {e}")
             self.save_screenshot("search_flights_error.png")
             return []
 
-    def extract_flight_results(self, fecha_start, fecha_end):
+    def extract_flight_results(self, fecha_start, fecha_end, fechas_ida, fechas_vuelta):
         vuelos = []
 
         for idx in [0, 1]:  # 0: Ida, 1: Vuelta
             tipo = "ida" if idx == 0 else "vuelta"
             try:
                 # Verificar que existan resultados
-                contenedor = self.wait.until(EC.presence_of_element_located(
-                    (By.CSS_SELECTOR, f"[data-test-id='flight-header--j|{idx}']")
-                ))
+                self.wait.until(EC.presence_of_element_located(
+                    (By.CSS_SELECTOR, f"[data-test-id='flight-header--j|{idx}']"))
+                )
 
                 tarjetas = self.driver.find_elements(By.CSS_SELECTOR, f"[data-test-id^='flight-fee-option--j|{idx}-i|']")
                 for tarjeta in tarjetas:
@@ -384,10 +386,7 @@ class JetSmartScraper:
                         destino = info.find_element(By.CSS_SELECTOR, f"[data-test-id='flight-flight-info-destination--j|{idx}'] .itinerary-station-name").text.strip()
                         hora_llegada = info.find_element(By.CSS_SELECTOR, f"[data-test-id='flight-flight-info-destination--j|{idx}'] .itinerary-flight-time").text.strip()
 
-                        # Precio SMART
                         precio_smart = tarjeta.find_element(By.CSS_SELECTOR, f"[data-test-id='flight-smart-fee--j|{idx}-i|0']").get_attribute("data-value")
-
-                        # Precio Club (opcional)
                         try:
                             precio_club = tarjeta.find_element(By.CSS_SELECTOR, f"[data-test-id='flight-club-fee--j|{idx}-i|0']").get_attribute("data-value")
                         except:
@@ -408,8 +407,48 @@ class JetSmartScraper:
             except Exception as e:
                 logger.warning(f"⚠️ No se encontraron resultados para {tipo}: {e}")
 
+            # Intentar abrir el calendario alternativo si está disponible
+            try:
+                btn_otras_fechas = self.driver.find_element(By.CSS_SELECTOR, "span.otherDatesText")
+                if btn_otras_fechas.is_displayed():
+                    self.driver.execute_script("arguments[0].click();", btn_otras_fechas)
+                    logger.info(f"🗓 Calendario alternativo de {tipo} abierto")
+                    time.sleep(2)
+                    self.save_screenshot(f"calendario_alternativo_{tipo}.png")
+
+                    calendario_selector = f"[data-test-id^='flight-calendar-day--j|{idx}-i|']"
+                    dias = self.driver.find_elements(By.CSS_SELECTOR, calendario_selector)
+
+                    fechas_validas = fechas_ida if tipo == "ida" else fechas_vuelta
+
+                    for dia in dias:
+                        try:
+                            fecha_dia = dia.get_attribute("data-date")
+                            if fecha_dia not in fechas_validas:
+                                continue
+
+                            precio_elem = dia.find_element(By.CSS_SELECTOR, ".price")
+                            precio = float(precio_elem.text.replace("$", "").replace(",", "").strip())
+
+                            vuelos.append({
+                                "tipo": tipo,
+                                "origen": "Alternativo",
+                                "destino": "Alternativo",
+                                "fecha": fecha_dia,
+                                "hora_salida": None,
+                                "hora_llegada": None,
+                                "precio_smart": precio,
+                                "precio_club": None,
+                            })
+                            logger.info(f"📆 Agregado desde calendario alternativo: {tipo} {fecha_dia} ${precio}")
+                        except Exception as e:
+                            logger.warning(f"⚠️ Error procesando día alternativo {tipo}: {e}")
+            except Exception:
+                logger.info(f"ℹ️ No se mostró calendario alternativo para {tipo}")
+
         logger.info(f"✈️ Se extrajeron {len(vuelos)} vuelos")
         return vuelos
+
 
     def send_discord_notification(self, flights, precio_max):
         if not flights:
@@ -470,17 +509,14 @@ def main():
     # Iterar sobre un grupo de fechas (ejemplo: varias fechas de ida y vuelta)
     
     try:
-        fechas_ida = ["2026-02-12","2026-02-13", "2026-02-14", "2026-02-15"]
-        fechas_vuelta = ["2026-02-21", "2026-02-22", "2026-02-23"]
+
         all_flights = []
-        for fecha_start in fechas_ida:
-            for fecha_end in fechas_vuelta:
-                flights = scraper.search_flights(
-                    config['origen_code'], config['origen_name'],
-                    config['destino_code'], config['destino_name'],
-                    fecha_start,
-                    fecha_end
-                )
+        flights = scraper.search_flights(
+            config['origen_code'], config['origen_name'],
+            config['destino_code'], config['destino_name'],
+            config['fecha_inicio'], config['fecha_fin']
+        )
+        
         all_flights.extend(flights)
 
         if all_flights:
