@@ -358,13 +358,13 @@ class JetSmartScraper:
             self.wait_and_click("[data-test-id='SUBMIT_SEARCH_BUTTON']")
             logger.info("🔍 Esperando resultados...")
             self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "[data-test-id*='flight']")))
-            return self.extract_flight_results(origen_code, destino_code)
+            return self.extract_flight_results(fecha_start, fecha_end)
         except Exception as e:
             logger.error(f"❌ Error en búsqueda de vuelos: {e}")
             self.save_screenshot("search_flights_error.png")
             return []
 
-    def extract_flight_results(self, origen_code, destino_code):
+    def extract_flight_results(self, fecha_start, fecha_end):
         vuelos = []
 
         for idx in [0, 1]:  # 0: Ida, 1: Vuelta
@@ -397,6 +397,7 @@ class JetSmartScraper:
                             "tipo": tipo,
                             "origen": origen,
                             "destino": destino,
+                            "fecha": fecha_start if tipo == "ida" else fecha_end,
                             "hora_salida": hora_salida,
                             "hora_llegada": hora_llegada,
                             "precio_smart": float(precio_smart),
@@ -430,7 +431,7 @@ class JetSmartScraper:
         for flight in flights:
             if flight['precio_smart'] <= precio_max:
                 embed["fields"].append({
-                    "name": f"{flight['tipo'].capitalize()} - {flight['origen']} → {flight['destino']}",
+                    "name": f"{flight['tipo'].capitalize()} - {flight['origen']} → {flight['destino']} ({flight['fecha']})",
                     "value": f"Hora: {flight['hora_salida']} - {flight['hora_llegada']}\n"
                              f"Precio SMART: ${flight['precio_smart']:.2f}\n"
                              f"Precio CLUB: ${flight['precio_club']:.2f}" if flight['precio_club'] else "",
@@ -466,17 +467,22 @@ def main():
         "precio_max": int(os.getenv('PRECIO_MAX', '200'))
     }
     scraper = JetSmartScraper()
+    # Iterar sobre un grupo de fechas (ejemplo: varias fechas de ida y vuelta)
+    
     try:
-        fecha_start = "2026-02-13"
-        fecha_end = "2026-02-21"
+        fechas_ida = ["2026-02-12","2026-02-13", "2026-02-14", "2026-02-15"]
+        fechas_vuelta = ["2026-02-21", "2026-02-22", "2026-02-23"]
         all_flights = []
-        flights = scraper.search_flights(
-            config['origen_code'], config['origen_name'],
-            config['destino_code'], config['destino_name'],
-            fecha_start,
-            fecha_end
-        )
+        for fecha_start in fechas_ida:
+            for fecha_end in fechas_vuelta:
+                flights = scraper.search_flights(
+                    config['origen_code'], config['origen_name'],
+                    config['destino_code'], config['destino_name'],
+                    fecha_start,
+                    fecha_end
+                )
         all_flights.extend(flights)
+
         if all_flights:
             scraper.send_discord_notification(all_flights, config['precio_max'])
         else:
