@@ -49,6 +49,13 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
+
+    - name: Instalar Chromium y dependencias
+      run: |
+        sudo apt update
+        sudo apt install -y chromium-browser chromium-chromedriver
+        sudo ln -s /usr/lib/chromium-browser/chromedriver /usr/bin/chromedriver
+        echo "CHROME_BIN=/usr/bin/chromium-browser" >> $GITHUB_ENV
     
     - name: Instalar Chromium y ChromeDriver
       run: |
