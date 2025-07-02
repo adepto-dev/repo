@@ -358,7 +358,7 @@ class JetSmartScraper:
             self.wait_and_click("[data-test-id='SUBMIT_SEARCH_BUTTON']")
             logger.info("🔍 Esperando resultados...")
             self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "[data-test-id*='flight']")))
-            return self.extract_flight_results(origen_code, destino_code, fecha)
+            return self.extract_flight_results(origen_code, destino_code)
         except Exception as e:
             logger.error(f"❌ Error en búsqueda de vuelos: {e}")
             self.save_screenshot("search_flights_error.png")
