@@ -50,12 +50,13 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Instalar Chromium y dependencias
+    - name: Instalar Chromium (vía APT)
       run: |
-        sudo apt update
-        sudo apt install -y chromium-browser chromium-chromedriver
+        sudo apt-get update
+        sudo apt-get install -y chromium-browser chromium-chromedriver
         sudo ln -s /usr/lib/chromium-browser/chromedriver /usr/bin/chromedriver
         echo "CHROME_BIN=/usr/bin/chromium-browser" >> $GITHUB_ENV
+
     
     - name: Instalar Chromium y ChromeDriver
       run: |
