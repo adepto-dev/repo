@@ -410,14 +410,16 @@ class JetSmartScraper:
             try:
                 self.save_screenshot(f"antes_calendario_alternativo_{tipo}.png")
                 btn_otras_fechas = self.wait.until(
-                    EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'BUSCA OTRAS FECHAS')]"))
+                    EC.element_to_be_clickable((By.CSS_SELECTOR, "[data-test-id='flight-switch-to-calendar']"))
                 )
+                btn_otras_fechas.click()
                 if btn_otras_fechas.is_displayed():
                     self.driver.execute_script("arguments[0].click();", btn_otras_fechas)
                     logger.info(f"🗓 Calendario alternativo de {tipo} abierto")
                     time.sleep(2)
                     self.save_screenshot(f"calendario_alternativo_{tipo}.png")
-            
+                    btn_otras_fechas.click()
+                    self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "[data-test-id='flight-calendar-journey--j|0']")))
                     calendario_selector = f"[data-test-id^='flight-calendar-day--j|{idx}-i|']"
                     dias = self.driver.find_elements(By.CSS_SELECTOR, calendario_selector)
             
