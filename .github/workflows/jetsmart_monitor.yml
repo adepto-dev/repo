@@ -31,7 +31,7 @@ on:
       fecha_fin:
         description: 'Fecha de fin (YYYY-MM-DD)'
         required: false
-        default: '2026-02-14'
+        default: '2026-02-21'
       precio_max:
         description: 'Precio máximo en USD'
         required: false
@@ -63,13 +63,11 @@ jobs:
     - name: Run flight monitor
       env:
         DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        ORIGEN_CODE: ${{ github.event.inputs.origen_code || 'SCL' }}
-        ORIGEN_NAME: ${{ github.event.inputs.origen_name || 'Santiago' }}
-        DESTINO_CODE: ${{ github.event.inputs.destino_code || 'BUE' }}
-        DESTINO_NAME: ${{ github.event.inputs.destino_name || 'Buenos Aires' }}
-        FECHA_INICIO: ${{ github.event.inputs.fecha_inicio || '2025-07-01' }}
-        FECHA_FIN: ${{ github.event.inputs.fecha_fin || '2025-07-31' }}
-        PRECIO_MAX: ${{ github.event.inputs.precio_max || '80000' }}
+        ORIGEN_CODE: ${{ github.event.inputs.origen_code || 'MVD' }}
+        ORIGEN_NAME: ${{ github.event.inputs.origen_name || 'Montevideo' }}
+        DESTINO_CODE: ${{ github.event.inputs.destino_code || 'RIO' }}
+        DESTINO_NAME: ${{ github.event.inputs.destino_name || 'Rio de Janeiro' }}
+        PRECIO_MAX: ${{ github.event.inputs.precio_max || '200' }}
       run: |
         python jetsmart_monitor.py
     
