@@ -50,12 +50,21 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Instalar Chromium y Chromedriver sin Snap
+    - name: Instalar Google Chrome
       run: |
+        wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+        sudo apt-get update
+        sudo apt install -y ./google-chrome-stable_current_amd64.deb
+        echo "CHROME_BIN=$(which google-chrome)" >> $GITHUB_ENV
+
+    - name: Instalar Chromium sin Snap (Debian repos)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget gnupg
+        echo 'deb http://deb.debian.org/debian sid main' | sudo tee -a /etc/apt/sources.list
         sudo apt-get update
         sudo apt-get install -y chromium chromium-driver
         echo "CHROME_BIN=$(which chromium)" >> $GITHUB_ENV
-
 
     - name: Install Python dependencies
       run: |
