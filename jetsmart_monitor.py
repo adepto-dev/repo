@@ -408,8 +408,9 @@ class JetSmartScraper:
                 logger.warning(f"⚠️ No se encontraron resultados para {tipo}: {e}")
 
             try:
+                self.save_screenshot(f"antes_calendario_alternativo_{tipo}.png")
                 btn_otras_fechas = self.wait.until(
-                    EC.presence_of_element_located((By.XPATH, "//span[contains(text(), 'Vuela en otra fecha')]"))
+                    EC.presence_of_element_located((By.CSS_SELECTOR, "span.otherDatesText"))
                 )
                 if btn_otras_fechas.is_displayed():
                     self.driver.execute_script("arguments[0].click();", btn_otras_fechas)
