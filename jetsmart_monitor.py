@@ -136,23 +136,30 @@ class JetSmartScraper:
             max_intentos = 24
         
             for _ in range(max_intentos):
-                # Revisar si ya está el mes objetivo visible
+                # Verificar si el mes ya es visible
                 meses_visibles = self.driver.find_elements(By.CSS_SELECTOR, "[data-test-id='DATE_MONTH_NAME']")
                 for mes in meses_visibles:
                     if mes.get_attribute("data-test-value") == mes_objetivo:
                         logger.info(f"✅ Mes {mes_objetivo} visible")
                         return True
         
-                # Buscar el botón de avanzar
+                # Buscar y clicar el botón de avanzar
                 botones_forward = self.driver.find_elements(By.CSS_SELECTOR, "[data-test-id='DATE_MOVE_FORWARD']")
                 for boton in botones_forward:
                     if boton.is_displayed() and boton.is_enabled():
                         try:
-                            self.driver.execute_script("arguments[0].scrollIntoView(true);", boton)
-                            # Acción directa con ActionChains para evitar intercepción
-                            ActionChains(self.driver).move_to_element(boton).pause(0.2).click().perform()
+                            # Scroll al contenedor principal del calendario para evitar overlays
+                            calendario = self.driver.find_element(By.CSS_SELECTOR, "[data-test-id='DATE_MONTH_CONTAINER']")
+                            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", calendario)
+                            time.sleep(0.3)
+        
+                            # Scroll al botón
+                            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", boton)
+                            time.sleep(0.2)
+        
+                            # Intentar click directo con JS (evita overlays flotantes)
+                            self.driver.execute_script("arguments[0].click();", boton)
                             logger.info("➡️ Avanzando un mes...")
-                            self.save_screenshot("meses.png")
                             time.sleep(0.8)
                             break
                         except Exception as e:
@@ -164,6 +171,7 @@ class JetSmartScraper:
         
             logger.warning(f"⚠️ No se encontró el mes {mes_objetivo}")
             return False
+
     
         def seleccionar_dia(fecha: str):
             try:
