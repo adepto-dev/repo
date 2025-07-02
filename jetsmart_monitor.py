@@ -407,29 +407,30 @@ class JetSmartScraper:
             except Exception as e:
                 logger.warning(f"⚠️ No se encontraron resultados para {tipo}: {e}")
 
-            # Intentar abrir el calendario alternativo si está disponible
             try:
-                btn_otras_fechas = self.driver.find_element(By.CSS_SELECTOR, "span.otherDatesText")
+                btn_otras_fechas = self.wait.until(
+                    EC.presence_of_element_located((By.XPATH, "//span[contains(text(), 'Vuela en otra fecha')]"))
+                )
                 if btn_otras_fechas.is_displayed():
                     self.driver.execute_script("arguments[0].click();", btn_otras_fechas)
                     logger.info(f"🗓 Calendario alternativo de {tipo} abierto")
                     time.sleep(2)
                     self.save_screenshot(f"calendario_alternativo_{tipo}.png")
-
+            
                     calendario_selector = f"[data-test-id^='flight-calendar-day--j|{idx}-i|']"
                     dias = self.driver.find_elements(By.CSS_SELECTOR, calendario_selector)
-
+            
                     fechas_validas = fechas_ida if tipo == "ida" else fechas_vuelta
-
+            
                     for dia in dias:
                         try:
                             fecha_dia = dia.get_attribute("data-date")
                             if fecha_dia not in fechas_validas:
                                 continue
-
+            
                             precio_elem = dia.find_element(By.CSS_SELECTOR, ".price")
                             precio = float(precio_elem.text.replace("$", "").replace(",", "").strip())
-
+            
                             vuelos.append({
                                 "tipo": tipo,
                                 "origen": "Alternativo",
@@ -443,8 +444,8 @@ class JetSmartScraper:
                             logger.info(f"📆 Agregado desde calendario alternativo: {tipo} {fecha_dia} ${precio}")
                         except Exception as e:
                             logger.warning(f"⚠️ Error procesando día alternativo {tipo}: {e}")
-            except Exception:
-                logger.info(f"ℹ️ No se mostró calendario alternativo para {tipo}")
+            except TimeoutException:
+                logger.info(f"ℹ️ Calendario alternativo no visible para {tipo}")
 
         logger.info(f"✈️ Se extrajeron {len(vuelos)} vuelos")
         return vuelos
@@ -509,14 +510,12 @@ def main():
     # Iterar sobre un grupo de fechas (ejemplo: varias fechas de ida y vuelta)
     
     try:
-
         all_flights = []
         flights = scraper.search_flights(
             config['origen_code'], config['origen_name'],
             config['destino_code'], config['destino_name'],
             config['fecha_inicio'], config['fecha_fin']
         )
-        
         all_flights.extend(flights)
 
         if all_flights:
