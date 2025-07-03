@@ -409,124 +409,162 @@ class JetSmartScraper:
                 logger.warning(f"⚠️ No se encontraron resultados para {tipo}: {e}")
 
         try:
-            self.save_screenshot(f"antes_calendario_alternativo_{tipo}.png")
+            self.save_screenshot(f"antes_calendario_alternativo.png")
             btn_otras_fechas = self.wait.until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, "[data-test-id='flight-switch-to-calendar']"))
             )
             self.driver.execute_script("arguments[0].click();", btn_otras_fechas)
-            logger.info(f"🗓 Calendario alternativo de {tipo} abierto")
-            time.sleep(3)  # Aumentar tiempo de espera
-            self.save_screenshot(f"calendario_alternativo_{tipo}.png")
+            logger.info(f"🗓 Calendario alternativo abierto")
+            time.sleep(3)
+            self.save_screenshot(f"calendario_alternativo_abierto.png")
         
-            # Definir el índice correcto según el tipo de vuelo
-            journey_idx = 0 if tipo == "ida" else 1
+            # Procesar ambos tipos de vuelos en loops separados
+            tipos_vuelos = []
             
-            # Si es vuelta, hacemos scroll hacia la parte de abajo
-            if tipo == "vuelta":
-                try:
-                    calendar_section = self.driver.find_element(By.CSS_SELECTOR, "[data-test-id='flight-calendar-journey--j|1']")
-                    self.driver.execute_script("arguments[0].scrollIntoView({block: 'start'});", calendar_section)
-                    time.sleep(2)
-                except Exception as e:
-                    logger.warning(f"⚠️ No se pudo hacer scroll a la sección de vuelta: {e}")
-        
-            # Usar el índice correcto para el selector
-            calendario_selector = f"[data-test-id^='flight-calendar-day-content--j|{journey_idx}-c|']"
-            logger.info(f"🔍 Buscando elementos con selector: {calendario_selector}")
+            # Agregar ida si hay fechas válidas
+            if fechas_ida:
+                tipos_vuelos.append(("ida", 0, fechas_ida))
             
-            # Esperar a que los elementos estén presentes
-            dias = self.wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, calendario_selector)))
-            logger.info(f"📅 Encontrados {len(dias)} días en calendario alternativo de {tipo}")
-        
-            fechas_validas = fechas_ida if tipo == "ida" else fechas_vuelta
-            logger.info(f"📋 Fechas válidas para {tipo}: {fechas_validas}")
-        
-            vuelos_encontrados = 0
-            for dia in dias:
-                try:
-                    test_id = dia.get_attribute("data-test-id") or ""
-                    precio_attr = dia.get_attribute("data-test-value")
-                    
-                    # Debug: mostrar información del elemento
-                    logger.debug(f"🔍 Procesando elemento: test_id='{test_id}', data-test-value='{precio_attr}'")
-                    
-                    # Extraer fecha del test-id
-                    match = re.search(r"(\d{4}-\d{2}-\d{2})", test_id)
-                    if not match:
-                        logger.debug(f"⚠️ No se pudo extraer fecha de test_id: {test_id}")
-                        continue
-        
-                    fecha_dia = match.group(1)
-                    if fecha_dia not in fechas_validas:
-                        logger.debug(f"⚠️ Fecha {fecha_dia} no está en fechas válidas")
-                        continue
-        
-                    # Intentar obtener precio del atributo data-test-value primero
-                    precio = None
-                    if precio_attr:
-                        try:
-                            precio = float(precio_attr)
-                            logger.debug(f"✅ Precio extraído de atributo: {precio}")
-                        except ValueError:
-                            logger.debug(f"⚠️ No se pudo convertir precio_attr '{precio_attr}' a float")
-                    
-                    # Si no hay precio en el atributo, extraer del texto
-                    if precio is None:
-                        try:
-                            texto_elemento = dia.text.strip()
-                            logger.debug(f"📝 Texto del elemento: '{texto_elemento}'")
-                            
-                            # Buscar precio en el texto usando regex
-                            precio_match = re.search(r'\$\s*(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)', texto_elemento)
-                            if precio_match:
-                                precio_str = precio_match.group(1)
-                                # Manejar formato argentino (130,00 -> 130.00)
-                                if ',' in precio_str and '.' not in precio_str:
-                                    precio_str = precio_str.replace(',', '.')
-                                elif ',' in precio_str and '.' in precio_str:
-                                    precio_str = precio_str.replace('.', '').replace(',', '.')
-                                
-                                precio = float(precio_str)
-                                logger.debug(f"✅ Precio extraído del texto: {precio}")
-                            else:
-                                logger.debug(f"⚠️ No se pudo extraer precio del texto: '{texto_elemento}'")
-                        except Exception as e:
-                            logger.debug(f"⚠️ Error extrayendo precio del texto: {e}")
-        
-                    if precio is None:
-                        logger.warning(f"⚠️ No se pudo obtener precio para {fecha_dia}")
-                        continue
-        
-                    vuelos.append({
-                        "tipo": tipo,
-                        "origen": "Alternativo",
-                        "destino": "Alternativo",
-                        "fecha": fecha_dia,
-                        "hora_salida": None,
-                        "hora_llegada": None,
-                        "precio_smart": precio,
-                        "precio_club": None,
-                    })
-                    
-                    vuelos_encontrados += 1
-                    logger.info(f"📆 Agregado desde calendario alternativo: {tipo} {fecha_dia} ${precio}")
-                    
-                except Exception as e:
-                    logger.warning(f"⚠️ Error procesando día alternativo {tipo}: {e}")
-                    # Agregar información de debug
+            # Agregar vuelta si hay fechas válidas
+            if fechas_vuelta:
+                tipos_vuelos.append(("vuelta", 1, fechas_vuelta))
+            
+            for tipo_vuelo, journey_idx, fechas_validas in tipos_vuelos:
+                logger.info(f"🔄 Procesando vuelos de {tipo_vuelo} (journey_idx: {journey_idx})")
+                
+                # Si es vuelta, hacer scroll hacia la sección correspondiente
+                if tipo_vuelo == "vuelta":
                     try:
-                        logger.debug(f"    Test ID: {dia.get_attribute('data-test-id')}")
-                        logger.debug(f"    Texto: {dia.text}")
-                        logger.debug(f"    Data-test-value: {dia.get_attribute('data-test-value')}")
-                    except:
-                        pass
+                        calendar_section = self.driver.find_element(By.CSS_SELECTOR, "[data-test-id='flight-calendar-journey--j|1']")
+                        self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", calendar_section)
+                        time.sleep(2)
+                        logger.info("📍 Scroll realizado hacia sección de vuelta")
+                    except Exception as e:
+                        logger.warning(f"⚠️ No se pudo hacer scroll a la sección de vuelta: {e}")
+                
+                # Selector específico para este tipo de vuelo
+                calendario_selector = f"[data-test-id^='flight-calendar-day-content--j|{journey_idx}-c|']"
+                logger.info(f"🔍 Buscando elementos con selector: {calendario_selector}")
+                
+                try:
+                    # Esperar a que los elementos estén presentes
+                    dias = self.wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, calendario_selector)))
+                    logger.info(f"📅 Encontrados {len(dias)} días en calendario alternativo de {tipo_vuelo}")
+                except TimeoutException:
+                    logger.warning(f"⏰ Timeout esperando elementos de {tipo_vuelo}")
+                    continue
+                
+                logger.info(f"📋 Fechas válidas para {tipo_vuelo}: {fechas_validas}")
+                
+                vuelos_encontrados = 0
+                vuelos_procesados = set()
+                
+                for dia in dias:
+                    try:
+                        test_id = dia.get_attribute("data-test-id") or ""
+                        precio_attr = dia.get_attribute("data-test-value")
+                        
+                        # Debug: mostrar información del elemento
+                        logger.debug(f"🔍 Procesando elemento: test_id='{test_id}', data-test-value='{precio_attr}'")
+                        
+                        # Extraer fecha del test-id
+                        match = re.search(r"(\d{4}-\d{2}-\d{2})", test_id)
+                        if not match:
+                            logger.debug(f"⚠️ No se pudo extraer fecha de test_id: {test_id}")
+                            continue
         
-            logger.info(f"✅ Total vuelos encontrados en calendario alternativo {tipo}: {vuelos_encontrados}")
+                        fecha_dia = match.group(1)
+                        if fecha_dia not in fechas_validas:
+                            logger.debug(f"⚠️ Fecha {fecha_dia} no está en fechas válidas para {tipo_vuelo}")
+                            continue
+        
+                        # Crear clave única para evitar duplicados
+                        clave_unica = f"{tipo_vuelo}_{fecha_dia}"
+                        if clave_unica in vuelos_procesados:
+                            logger.debug(f"⚠️ Vuelo duplicado ignorado: {clave_unica}")
+                            continue
+                        
+                        # Intentar obtener precio del atributo data-test-value primero
+                        precio = None
+                        if precio_attr:
+                            try:
+                                precio = float(precio_attr)
+                                logger.debug(f"✅ Precio extraído de atributo: {precio}")
+                            except ValueError:
+                                logger.debug(f"⚠️ No se pudo convertir precio_attr '{precio_attr}' a float")
+                        
+                        # Si no hay precio en el atributo, extraer del texto
+                        if precio is None:
+                            try:
+                                texto_elemento = dia.text.strip()
+                                logger.debug(f"📝 Texto del elemento: '{texto_elemento}'")
+                                
+                                # Limpiar texto y buscar precio
+                                lineas = texto_elemento.split('\n')
+                                for linea in lineas:
+                                    linea = linea.strip()
+                                    if linea.startswith('$'):
+                                        # Buscar precio en formato $ XX,XX o $ XXX,XX
+                                        precio_match = re.search(r'\$\s*(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)', linea)
+                                        if precio_match:
+                                            precio_str = precio_match.group(1)
+                                            # Manejar formato argentino (130,00 -> 130.00)
+                                            if ',' in precio_str and '.' not in precio_str:
+                                                precio_str = precio_str.replace(',', '.')
+                                            elif ',' in precio_str and '.' in precio_str:
+                                                precio_str = precio_str.replace('.', '').replace(',', '.')
+                                            
+                                            precio = float(precio_str)
+                                            logger.debug(f"✅ Precio extraído del texto: {precio}")
+                                            break
+                                
+                                if precio is None:
+                                    logger.debug(f"⚠️ No se pudo extraer precio del texto: '{texto_elemento}'")
+                            except Exception as e:
+                                logger.debug(f"⚠️ Error extrayendo precio del texto: {e}")
+        
+                        if precio is None:
+                            logger.warning(f"⚠️ No se pudo obtener precio para {tipo_vuelo} {fecha_dia}")
+                            # Mostrar información del elemento para debug
+                            logger.debug(f"    HTML: {dia.get_attribute('outerHTML')[:200]}...")
+                            continue
+        
+                        # Marcar como procesado antes de agregar
+                        vuelos_procesados.add(clave_unica)
+                        
+                        vuelos.append({
+                            "tipo": tipo_vuelo,
+                            "origen": "Alternativo",
+                            "destino": "Alternativo",
+                            "fecha": fecha_dia,
+                            "hora_salida": None,
+                            "hora_llegada": None,
+                            "precio_smart": precio,
+                            "precio_club": None,
+                        })
+                        
+                        vuelos_encontrados += 1
+                        logger.info(f"📆 Agregado desde calendario alternativo: {tipo_vuelo} {fecha_dia} ${precio}")
+                        
+                    except Exception as e:
+                        logger.warning(f"⚠️ Error procesando día alternativo {tipo_vuelo}: {e}")
+                        # Agregar información de debug
+                        try:
+                            logger.debug(f"    Test ID: {dia.get_attribute('data-test-id')}")
+                            logger.debug(f"    Texto: {dia.text}")
+                            logger.debug(f"    Data-test-value: {dia.get_attribute('data-test-value')}")
+                            logger.debug(f"    HTML: {dia.get_attribute('outerHTML')[:200]}...")
+                        except:
+                            pass
+        
+                logger.info(f"✅ Total vuelos encontrados en calendario alternativo {tipo_vuelo}: {vuelos_encontrados}")
+            
+            logger.info(f"🎯 Procesamiento de calendario alternativo completado")
             
         except TimeoutException:
-            logger.info(f"ℹ️ Calendario alternativo no visible para {tipo}")
+            logger.info(f"ℹ️ Calendario alternativo no visible")
         except Exception as e:
-            logger.error(f"❌ Error inesperado al procesar calendario alternativo {tipo}: {e}")
+            logger.error(f"❌ Error inesperado al procesar calendario alternativo: {e}")
             import traceback
             logger.debug(f"Stack trace: {traceback.format_exc()}")
             
