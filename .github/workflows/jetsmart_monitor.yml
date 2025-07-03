@@ -6,7 +6,7 @@ name: JetSmart Flight Monitor
  #   - cron: '0 */2 * * *'
   
   # Permitir ejecución manual
-  #workflow_dispatch:
+  workflow_dispatch:
     inputs:
       origen_code:
         description: 'Código del aeropuerto de origen'
