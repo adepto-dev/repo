@@ -2,8 +2,7 @@ name: JetSmart Flight Monitor
 
 on:
   schedule:
-    # Ejecutar cada 2 horas
-    - cron: '0 */2 * * *'
+    - cron: '0 8,20 * * *'
   
   # Permitir ejecución manual
   workflow_dispatch:
