@@ -610,6 +610,8 @@ class JetSmartScraper:
                     "value": "\n".join(value_lines),
                     "inline": False
                 })
+            else:
+                logger.info("✅ Los precios son muy caros :(")
         
         data = {
             "embeds": [embed]
