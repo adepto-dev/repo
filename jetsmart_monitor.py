@@ -410,8 +410,6 @@ class JetSmartScraper:
 
         try:
             self.save_screenshot(f"antes_calendario_alternativo_{tipo}.png")
-        
-            # Buscar y clickear el botón
             btn_otras_fechas = self.wait.until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, "[data-test-id='flight-switch-to-calendar']"))
             )
@@ -420,37 +418,31 @@ class JetSmartScraper:
             time.sleep(2)
             self.save_screenshot(f"calendario_alternativo_{tipo}.png")
         
-            # Esperar a que cargue el calendario específico (0: ida, 1: vuelta)
-            self.wait.until(EC.presence_of_element_located(
-                (By.CSS_SELECTOR, f"[data-test-id='flight-calendar-journey--j|{idx}']"))
-            )
-            
-            # Buscar los días en el calendario alternativo
-            dias = self.driver.find_elements(By.CSS_SELECTOR, f"[data-test-id^='flight-calendar-day-content--j|{idx}-c|']")
-            
+            # Si es vuelta, hacemos scroll hacia la parte de abajo
+            if tipo == "vuelta":
+                calendar_section = self.driver.find_element(By.CSS_SELECTOR, "[data-test-id='flight-calendar-journey--j|1']")
+                self.driver.execute_script("arguments[0].scrollIntoView({block: 'start'});", calendar_section)
+                time.sleep(1)
+        
+            calendario_selector = f"[data-test-id^='flight-calendar-day-content--j|{idx}-c|']"
+            dias = self.driver.find_elements(By.CSS_SELECTOR, calendario_selector)
+        
             fechas_validas = fechas_ida if tipo == "ida" else fechas_vuelta
-            
+        
             for dia in dias:
                 try:
-                    test_id = dia.get_attribute("data-test-id")
-                    precio_raw = dia.get_attribute("data-test-value")
-                    
-                    if not test_id or not precio_raw:
-                        continue
-            
-                    # Extraer la fecha del test-id
+                    test_id = dia.get_attribute("data-test-id") or ""
                     match = re.search(r"(\d{4}-\d{2}-\d{2})", test_id)
                     if not match:
                         continue
-            
+        
                     fecha_dia = match.group(1)
-            
                     if fecha_dia not in fechas_validas:
                         continue
-            
-                    # Parsear precio
-                    precio = float(precio_raw)
-            
+        
+                    precio_raw = dia.text.strip().split("\n")[0].strip()
+                    precio = float(precio_raw.replace("$", "").replace(",", "").strip())
+        
                     vuelos.append({
                         "tipo": tipo,
                         "origen": "Alternativo",
@@ -462,16 +454,12 @@ class JetSmartScraper:
                         "precio_club": None,
                     })
                     logger.info(f"📆 Agregado desde calendario alternativo: {tipo} {fecha_dia} ${precio}")
-            
                 except Exception as e:
                     logger.warning(f"⚠️ Error procesando día alternativo {tipo}: {e}")
-
         except TimeoutException:
             logger.info(f"ℹ️ Calendario alternativo no visible para {tipo}")
         except Exception as e:
-            logger.error(f"❌ Error general en calendario alternativo {tipo}: {e}")
-            self.save_screenshot(f"error_calendario_alternativo_{tipo}.png")
-
+            logger.error(f"❌ Error inesperado al procesar calendario alternativo {tipo}: {e}")
         logger.info(f"✈️ Se extrajeron {len(vuelos)} vuelos")
         return vuelos
 
