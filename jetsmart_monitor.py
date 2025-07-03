@@ -591,14 +591,26 @@ class JetSmartScraper:
 
         for flight in flights:
             if flight['precio_smart'] <= precio_max:
+                # Crear valor del campo
+                value_lines = []
+                
+                # Solo mostrar horarios si existen
+                if flight['hora_salida'] and flight['hora_llegada']:
+                    value_lines.append(f"Hora: {flight['hora_salida']} - {flight['hora_llegada']}")
+                
+                # Precio SMART (siempre existe)
+                value_lines.append(f"Precio SMART: ${flight['precio_smart']:.2f}")
+                
+                # Precio CLUB (solo si existe)
+                if flight['precio_club']:
+                    value_lines.append(f"Precio CLUB: ${flight['precio_club']:.2f}")
+                
                 embed["fields"].append({
                     "name": f"{flight['tipo'].capitalize()} - {flight['origen']} → {flight['destino']} ({flight['fecha']})",
-                    "value": f"Hora: {flight['hora_salida']} - {flight['hora_llegada']}\n"
-                             f"Precio SMART: ${flight['precio_smart']:.2f}\n"
-                             f"Precio CLUB: ${flight['precio_club']:.2f}" if flight['precio_club'] else "",
+                    "value": "\n".join(value_lines),
                     "inline": False
                 })
-
+        
         data = {
             "embeds": [embed]
         }
