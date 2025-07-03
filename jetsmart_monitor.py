@@ -423,22 +423,33 @@ class JetSmartScraper:
             self.wait.until(EC.presence_of_element_located(
                 (By.CSS_SELECTOR, f"[data-test-id='flight-calendar-journey--j|{idx}']"))
             )
-        
-            # Extraer los días
-            calendario_selector = f"[data-test-id^='flight-calendar-day--j|{idx}-i|']"
-            dias = self.driver.find_elements(By.CSS_SELECTOR, calendario_selector)
-        
+            
+            # Buscar los días en el calendario alternativo
+            dias = self.driver.find_elements(By.CSS_SELECTOR, f"[data-test-id^='flight-calendar-day-content--j|{idx}-c|']")
+            
             fechas_validas = fechas_ida if tipo == "ida" else fechas_vuelta
-        
+            
             for dia in dias:
                 try:
-                    fecha_dia = dia.get_attribute("data-date")
+                    test_id = dia.get_attribute("data-test-id")
+                    precio_raw = dia.get_attribute("data-test-value")
+                    
+                    if not test_id or not precio_raw:
+                        continue
+            
+                    # Extraer la fecha del test-id
+                    match = re.search(r"(\d{4}-\d{2}-\d{2})", test_id)
+                    if not match:
+                        continue
+            
+                    fecha_dia = match.group(1)
+            
                     if fecha_dia not in fechas_validas:
                         continue
-        
-                    precio_elem = dia.find_element(By.CSS_SELECTOR, ".price")
-                    precio = float(precio_elem.text.replace("$", "").replace(",", "").strip())
-        
+            
+                    # Parsear precio
+                    precio = float(precio_raw)
+            
                     vuelos.append({
                         "tipo": tipo,
                         "origen": "Alternativo",
@@ -450,6 +461,7 @@ class JetSmartScraper:
                         "precio_club": None,
                     })
                     logger.info(f"📆 Agregado desde calendario alternativo: {tipo} {fecha_dia} ${precio}")
+            
                 except Exception as e:
                     logger.warning(f"⚠️ Error procesando día alternativo {tipo}: {e}")
 
