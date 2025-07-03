@@ -407,47 +407,57 @@ class JetSmartScraper:
             except Exception as e:
                 logger.warning(f"⚠️ No se encontraron resultados para {tipo}: {e}")
 
-            try:
-                self.save_screenshot(f"antes_calendario_alternativo_{tipo}.png")
-                btn_otras_fechas = self.wait.until(
-                    EC.element_to_be_clickable((By.CSS_SELECTOR, "[data-test-id='flight-switch-to-calendar']"))
-                )
-                btn_otras_fechas.click()
-                if btn_otras_fechas.is_displayed():
-                    self.driver.execute_script("arguments[0].click();", btn_otras_fechas)
-                    logger.info(f"🗓 Calendario alternativo de {tipo} abierto")
-                    time.sleep(2)
-                    self.save_screenshot(f"calendario_alternativo_{tipo}.png")
-                    self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "[data-test-id='flight-calendar-journey--j|0']")))
-                    calendario_selector = f"[data-test-id^='flight-calendar-day--j|{idx}-i|']"
-                    dias = self.driver.find_elements(By.CSS_SELECTOR, calendario_selector)
-            
-                    fechas_validas = fechas_ida if tipo == "ida" else fechas_vuelta
-            
-                    for dia in dias:
-                        try:
-                            fecha_dia = dia.get_attribute("data-date")
-                            if fecha_dia not in fechas_validas:
-                                continue
-            
-                            precio_elem = dia.find_element(By.CSS_SELECTOR, ".price")
-                            precio = float(precio_elem.text.replace("$", "").replace(",", "").strip())
-            
-                            vuelos.append({
-                                "tipo": tipo,
-                                "origen": "Alternativo",
-                                "destino": "Alternativo",
-                                "fecha": fecha_dia,
-                                "hora_salida": None,
-                                "hora_llegada": None,
-                                "precio_smart": precio,
-                                "precio_club": None,
-                            })
-                            logger.info(f"📆 Agregado desde calendario alternativo: {tipo} {fecha_dia} ${precio}")
-                        except Exception as e:
-                            logger.warning(f"⚠️ Error procesando día alternativo {tipo}: {e}")
-            except TimeoutException:
-                logger.info(f"ℹ️ Calendario alternativo no visible para {tipo}")
+        try:
+            self.save_screenshot(f"antes_calendario_alternativo_{tipo}.png")
+        
+            # Buscar y clickear el botón
+            btn_otras_fechas = self.wait.until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, "[data-test-id='flight-switch-to-calendar']"))
+            )
+            self.driver.execute_script("arguments[0].click();", btn_otras_fechas)
+            logger.info(f"🗓 Calendario alternativo de {tipo} abierto")
+            time.sleep(2)
+            self.save_screenshot(f"calendario_alternativo_{tipo}.png")
+        
+            # Esperar a que cargue el calendario específico (0: ida, 1: vuelta)
+            self.wait.until(EC.presence_of_element_located(
+                (By.CSS_SELECTOR, f"[data-test-id='flight-calendar-journey--j|{idx}']"))
+            )
+        
+            # Extraer los días
+            calendario_selector = f"[data-test-id^='flight-calendar-day--j|{idx}-i|']"
+            dias = self.driver.find_elements(By.CSS_SELECTOR, calendario_selector)
+        
+            fechas_validas = fechas_ida if tipo == "ida" else fechas_vuelta
+        
+            for dia in dias:
+                try:
+                    fecha_dia = dia.get_attribute("data-date")
+                    if fecha_dia not in fechas_validas:
+                        continue
+        
+                    precio_elem = dia.find_element(By.CSS_SELECTOR, ".price")
+                    precio = float(precio_elem.text.replace("$", "").replace(",", "").strip())
+        
+                    vuelos.append({
+                        "tipo": tipo,
+                        "origen": "Alternativo",
+                        "destino": "Alternativo",
+                        "fecha": fecha_dia,
+                        "hora_salida": None,
+                        "hora_llegada": None,
+                        "precio_smart": precio,
+                        "precio_club": None,
+                    })
+                    logger.info(f"📆 Agregado desde calendario alternativo: {tipo} {fecha_dia} ${precio}")
+                except Exception as e:
+                    logger.warning(f"⚠️ Error procesando día alternativo {tipo}: {e}")
+
+        except TimeoutException:
+            logger.info(f"ℹ️ Calendario alternativo no visible para {tipo}")
+        except Exception as e:
+            logger.error(f"❌ Error general en calendario alternativo {tipo}: {e}")
+            self.save_screenshot(f"error_calendario_alternativo_{tipo}.png")
 
         logger.info(f"✈️ Se extrajeron {len(vuelos)} vuelos")
         return vuelos
