@@ -358,8 +358,8 @@ class JetSmartScraper:
             # Buscar vuelos
             self.wait_and_click("[data-test-id='SUBMIT_SEARCH_BUTTON']")
             logger.info("🔍 Esperando resultados...")
-            fechas_ida = ["2026-02-12", "2026-02-14", "2026-02-15"]
-            fechas_vuelta = ["2026-02-22", "2026-02-23", "2026-02-24"]
+            fechas_ida = ["2026-02-11", "2026-02-12", "2026-02-14", "2026-02-15"]
+            fechas_vuelta = ["2026-02-22", "2026-02-23", "2026-02-24", "2026-02-25", "2026-02-26"]
             self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "[data-test-id*='flight']")))
             return self.extract_flight_results(fecha_start, fecha_end, fechas_ida, fechas_vuelta)
         except Exception as e:
@@ -637,7 +637,7 @@ def main():
         "destino_name": os.getenv('DESTINO_NAME', 'Rio de Janeiro'),
         "fecha_inicio": os.getenv('FECHA_INICIO', '2026-02-13'),
         "fecha_fin": os.getenv('FECHA_FIN', '2026-02-21'),
-        "precio_max": int(os.getenv('PRECIO_MAX', '200'))
+        "precio_max": int(os.getenv('PRECIO_MAX', '100'))
     }
     scraper = JetSmartScraper()
     # Iterar sobre un grupo de fechas (ejemplo: varias fechas de ida y vuelta)
