@@ -34,7 +34,7 @@ on:
       precio_max:
         description: 'Precio máximo en USD'
         required: false
-        default: '200'
+        default: '100'
 
 jobs:
   monitor-flights:
@@ -66,7 +66,7 @@ jobs:
         ORIGEN_NAME: ${{ github.event.inputs.origen_name || 'Montevideo' }}
         DESTINO_CODE: ${{ github.event.inputs.destino_code || 'RIO' }}
         DESTINO_NAME: ${{ github.event.inputs.destino_name || 'Rio de Janeiro' }}
-        PRECIO_MAX: ${{ github.event.inputs.precio_max || '200' }}
+        PRECIO_MAX: ${{ github.event.inputs.precio_max || '100' }}
       run: |
         python jetsmart_monitor.py
     
