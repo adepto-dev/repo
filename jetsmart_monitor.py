@@ -612,6 +612,7 @@ class JetSmartScraper:
                 })
             else:
                 logger.info("✅ Los precios son muy caros :(")
+                self.close()
         
         data = {
             "embeds": [embed]
