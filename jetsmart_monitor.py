@@ -582,41 +582,57 @@ class JetSmartScraper:
             logger.error("❌ No se ha configurado el webhook de Discord")
             return
 
-        embed = {
-            "title": "✈️ Vuelos encontrados",
-            "description": f"Se encontraron {len(flights)} vuelos desde {flights[0]['origen']} a {flights[0]['destino']}",
-            "color": 5814783,
-            "fields": []
-        }
-
+        # Variable para controlar si hay vuelos con precios aceptables
+        hay_vuelos_baratos = False
+        
+        # Primero revisar si hay algún vuelo con precio aceptable
         for flight in flights:
             if flight['precio_smart'] <= precio_max:
-                # Crear valor del campo
-                value_lines = []
-                
-                # Solo mostrar horarios si existen
-                if flight['hora_salida'] and flight['hora_llegada']:
-                    value_lines.append(f"Hora: {flight['hora_salida']} - {flight['hora_llegada']}")
-                
-                # Precio SMART (siempre existe)
-                value_lines.append(f"Precio SMART: ${flight['precio_smart']:.2f}")
-                
-                # Precio CLUB (solo si existe)
-                if flight['precio_club']:
-                    value_lines.append(f"Precio CLUB: ${flight['precio_club']:.2f}")
-                
-                embed["fields"].append({
-                    "name": f"{flight['tipo'].capitalize()} - {flight['origen']} → {flight['destino']} ({flight['fecha']})",
-                    "value": "\n".join(value_lines),
-                    "inline": False
-                })
-            else:
-                logger.info("✅ Los precios son muy caros :(")
-                self.close()
+                hay_vuelos_baratos = True
+                break
+    
+        # Solo crear y enviar el embed si hay vuelos con precios aceptables
+        if hay_vuelos_baratos:
+            embed = {
+                "title": "✈️ Vuelos encontrados",
+                "description": f"Se encontraron {len(flights)} vuelos desde {flights[0]['origen']} a {flights[0]['destino']}",
+                "color": 5814783,
+                "fields": []
+            }
         
-        data = {
-            "embeds": [embed]
-        }
+            for flight in flights:
+                if flight['precio_smart'] <= precio_max:
+                    # Crear valor del campo
+                    value_lines = []
+                    
+                    # Solo mostrar horarios si existen
+                    if flight['hora_salida'] and flight['hora_llegada']:
+                        value_lines.append(f"Hora: {flight['hora_salida']} - {flight['hora_llegada']}")
+                    
+                    # Precio SMART (siempre existe)
+                    value_lines.append(f"Precio SMART: ${flight['precio_smart']:.2f}")
+                    
+                    # Precio CLUB (solo si existe)
+                    if flight['precio_club']:
+                        value_lines.append(f"Precio CLUB: ${flight['precio_club']:.2f}")
+                    
+                    embed["fields"].append({
+                        "name": f"{flight['tipo'].capitalize()} - {flight['origen']} → {flight['destino']} ({flight['fecha']})",
+                        "value": "\n".join(value_lines),
+                        "inline": False
+                    })
+            
+            data = {
+                "embeds": [embed]
+            }
+            
+            # Aquí envías el mensaje a Discord
+            # ejemplo: requests.post(webhook_url, json=data)
+            
+        else:
+            # Los precios son muy caros, no enviar nada a Discord
+            logger.info("✅ Los precios son muy caros :( - No se enviará mensaje a Discord")
+            self.close()
 
         try:
             response = requests.post(url, json=data)
@@ -640,7 +656,7 @@ def main():
         "destino_name": os.getenv('DESTINO_NAME', 'Rio de Janeiro'),
         "fecha_inicio": os.getenv('FECHA_INICIO', '2026-02-13'),
         "fecha_fin": os.getenv('FECHA_FIN', '2026-02-21'),
-        "precio_max": int(os.getenv('PRECIO_MAX', '100'))
+        "precio_max": int(os.getenv('PRECIO_MAX', '120'))
     }
     scraper = JetSmartScraper()
     # Iterar sobre un grupo de fechas (ejemplo: varias fechas de ida y vuelta)
