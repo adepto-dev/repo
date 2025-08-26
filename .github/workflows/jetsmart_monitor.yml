@@ -1,8 +1,8 @@
 name: JetSmart Flight Monitor
 
-on:
-  schedule:
-    - cron: '0 */3 * * *'
+#on:
+ # schedule:
+  #  - cron: '0 */3 * * *'
   
   # Permitir ejecución manual
   workflow_dispatch:
