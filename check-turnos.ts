@@ -29,7 +29,7 @@ async function main() {
       await passwordInput.fill(pass);
   
       // Botón Login (buscar cualquier texto descendiente que diga "Ingresar")
-      const loginBtn = page.locator('button:has-text("Ingresar")');
+      const loginBtn = page.locator('button:has-text("Entrar")');
       await loginBtn.waitFor({ state: 'visible', timeout: 30000 });
       await loginBtn.click();
   
