@@ -19,4 +19,4 @@ on:
             env:
               USER_MUTUALISTA: ${{ secrets.USER_MUTUALISTA }}
               PASS_MUTUALISTA: ${{ secrets.PASS_MUTUALISTA }}
-              DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+              DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
