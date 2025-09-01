@@ -14,6 +14,7 @@ async function main() {
   await page.getByRole('textbox', { name: 'Contraseña Contraseña' }).fill(process.env.PASS_MUTUALISTA);
   await page.getByRole('textbox', { name: 'Contraseña Contraseña' }).press('Enter');
   await page.goto('https://portal.cosem.com.uy/PortalWeb/uy.com.ust.hmrodisdat');
+  await page.screenshot({ path: 'antes_agenda.png', fullPage: true });
   await page.getByRole('button', { name: 'Agenda' }).click();
   await page.locator('#NUEVOTURNO i').click();
   await page.locator('#gxp0_ifrm').contentFrame().getByRole('textbox', { name: 'Buscar especialidad o' }).click();
