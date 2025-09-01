@@ -11,7 +11,7 @@ async function main() {
   await page.getByRole('textbox', { name: 'Documento Documento' }).click();
   await page.getByRole('textbox', { name: 'Documento Documento' }).fill(process.env.USER_MUTUALISTA);
   await page.getByRole('textbox', { name: 'Contraseña Contraseña' }).click();
-  await page.getByRole('textbox', { name: 'Contraseña Contraseña' }).fill(process.env.USER_PASSWORD);
+  await page.getByRole('textbox', { name: 'Contraseña Contraseña' }).fill(process.env.PASS_MUTUALISTA);
   await page.getByRole('textbox', { name: 'Contraseña Contraseña' }).press('Enter');
   await page.goto('https://portal.cosem.com.uy/PortalWeb/uy.com.ust.hmrodisdat');
   await page.getByRole('button', { name: 'Agenda' }).click();
