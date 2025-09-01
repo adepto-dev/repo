@@ -1,8 +1,9 @@
 import { chromium } from "playwright";
 import fetch from "node-fetch";
 import fs from "fs";
+import os
 
-const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK;
+const DISCORD_WEBHOOK = os.getenv('DISCORD_WEBHOOK');
 
 // Crear carpeta de screenshots si no existe
 if (!fs.existsSync('screenshots')) fs.mkdirSync('screenshots');
@@ -15,9 +16,12 @@ async function main() {
     // ====== LOGIN ======
     await page.goto('https://portal.cosem.com.uy/PortalWeb/uy.com.ust.hsglogin?,,');
     await page.screenshot({ path: 'screenshots/antes_login.png', fullPage: true });
-
-    await page.getByRole('textbox', { name: 'Documento Documento' }).fill(process.env.USER_MUTUALISTA);
-    await page.getByRole('textbox', { name: 'Contraseña Contraseña' }).fill(process.env.PASS_MUTUALISTA);
+    user = os.getenv('USER_MUTUALISTA')
+    pass = os.getenv('PASS_MUTUALISTA')
+    console.log("USER_MUTUALISTA:", !!process.env.USER_MUTUALISTA);
+    console.log("PASS_MUTUALISTA:", !!process.env.PASS_MUTUALISTA);
+    await page.getByRole('textbox', { name: 'Documento Documento' }).fill(user);
+    await page.getByRole('textbox', { name: 'Contraseña Contraseña' }).fill(pass);
     await page.getByRole('textbox', { name: 'Contraseña Contraseña' }).press('Enter');
 
     // ====== IR A AGENDA ======
