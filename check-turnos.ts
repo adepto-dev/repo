@@ -17,15 +17,33 @@ async function main() {
     await page.screenshot({ path: 'screenshots/antes_login.png', fullPage: true });
     const user = process.env.USER_MUTUALISTA!;
     const pass = process.env.PASS_MUTUALISTA!;
-    console.log("USER_MUTUALISTA:", !!process.env.USER_MUTUALISTA);
-    console.log("PASS_MUTUALISTA:", !!process.env.PASS_MUTUALISTA);
-    await page.getByRole('textbox', { name: 'Documento Documento' }).waitFor({ state: 'visible', timeout: 30000 });
-    await page.getByRole('textbox', { name: 'Documento Documento' }).fill(user);
-    await page.getByRole('textbox', { name: 'Contraseña Contraseña' }).fill(pass);
-    await page.getByRole('textbox', { name: 'Contraseña Contraseña' }).press('Enter');
-
-    // ====== IR A AGENDA ======
-    await page.goto('https://portal.cosem.com.uy/PortalWeb/uy.com.ust.hmrodisdat');
+    try {
+      // Input Usuario
+      const usuarioInput = page.locator('#vUSUARIO');
+      await usuarioInput.waitFor({ state: 'visible', timeout: 30000 });
+      await usuarioInput.fill(user);
+  
+      // Input Contraseña
+      const passwordInput = page.locator('#vPASSWORD');
+      await passwordInput.waitFor({ state: 'visible', timeout: 30000 });
+      await passwordInput.fill(pass);
+  
+      // Botón Login (buscar cualquier texto descendiente que diga "Ingresar")
+      const loginBtn = page.locator('button:has-text("Ingresar")');
+      await loginBtn.waitFor({ state: 'visible', timeout: 30000 });
+      await loginBtn.click();
+  
+      // Screenshot después de login
+      await page.screenshot({ path: 'screenshots/post_login.png', fullPage: true });
+  
+      console.log("Login ejecutado correctamente ✅");
+  
+    } catch (error) {
+      // Captura de pantalla si falla el login
+      await page.screenshot({ path: 'screenshots/fallo_login.png', fullPage: true });
+      console.error("Fallo en login:", error);
+      throw error;
+      
     await page.screenshot({ path: 'screenshots/antes_agenda.png', fullPage: true });
 
     // Click en botón Agenda con manejo de error y timeout extendido
