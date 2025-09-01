@@ -22,7 +22,7 @@ jobs:
             PASS_MUTUALISTA: ${{ secrets.PASS_MUTUALISTA }}
             DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
         - name: Subir capturas
-          uses: actions/upload-artifact@v3
+          uses: actions/upload-artifact@v4
           with:
               name: screenshots
               path: 'screenshots/*.png'   # sube todos los PNG generados
