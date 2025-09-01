@@ -85,7 +85,7 @@ async function main() {
     }
 
     // ====== CHEQUEO DE TURNOS ======
-    const noHayHoras = await frame.locator("#span_vEMPTYNOHAYHORAS").isVisible().catch(() => false);
+    const noHayHoras = await frame.locator("#span_vEMPTYNOHAYHORAS").waitFor({ state: 'visible', timeout: 60000 }).catch(() => false);
 
     await page.screenshot({ path: 'screenshots/resultado.png', fullPage: true });
 
