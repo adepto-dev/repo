@@ -1,0 +1,21 @@
+name: Check turnos
+
+on:
+  schedule:
+    - cron: "0 10 * * *"   # todos los días a las 10 AM UTC
+  workflow_dispatch:
+
+jobs:
+  check-turnos:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.48.0-jammy
+
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm install
+      - run: npm start
+        env:
+          USER_MUTUALISTA: ${{ secrets.USER_MUTUALISTA }}
+          PASS_MUTUALISTA: ${{ secrets.PASS_MUTUALISTA }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
