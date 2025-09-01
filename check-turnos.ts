@@ -2,7 +2,7 @@ import { chromium } from "playwright";
 import fetch from "node-fetch";
 import fs from "fs";
 
-const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK!;
+const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK;
 
 // Crear carpeta de screenshots si no existe
 if (!fs.existsSync('screenshots')) fs.mkdirSync('screenshots');
