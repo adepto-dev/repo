@@ -3,26 +3,28 @@ name: Check turnos
 on:
   schedule:
     - cron: "0 10 * * *"   # todos los días a las 10 AM UTC
-
   workflow_dispatch:
-  
+
 jobs:
-    check-turnos:
-      runs-on: ubuntu-latest
-      container:
-        image: mcr.microsoft.com/playwright:v1.48.0-jammy
-  
-      steps:
-        - uses: actions/checkout@v3
-        - run: npm install
-        - run: npx playwright install --with-deps
-        - run: npm start
-          env:
-            USER_MUTUALISTA: ${{ secrets.USER_MUTUALISTA }}
-            PASS_MUTUALISTA: ${{ secrets.PASS_MUTUALISTA }}
-            DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        - name: Subir capturas
-          uses: actions/upload-artifact@v4
-          with:
-              name: screenshots
-              path: 'screenshots/*.png'   # sube todos los PNG generados
+  check-turnos:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.48.0-jammy
+
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm install
+      - run: npx playwright install --with-deps
+      - name: Ejecutar script de turnos
+        run: npm start
+        env:
+          USER_MUTUALISTA: ${{ secrets.USER_MUTUALISTA }}
+          PASS_MUTUALISTA: ${{ secrets.PASS_MUTUALISTA }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+      - name: Asegurar carpeta screenshots
+        run: mkdir -p screenshots
+      - name: Subir capturas
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: 'screenshots/**'
