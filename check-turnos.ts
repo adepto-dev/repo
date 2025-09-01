@@ -1,7 +1,7 @@
 import { chromium } from "playwright";
 import fetch from "node-fetch";
 import fs from "fs";
-import os
+import os;
 
 const DISCORD_WEBHOOK = os.getenv('DISCORD_WEBHOOK');
 
