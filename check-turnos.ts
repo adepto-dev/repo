@@ -27,11 +27,12 @@ async function main() {
       const passwordInput = page.locator('#vPASSWORD');
       await passwordInput.waitFor({ state: 'visible', timeout: 30000 });
       await passwordInput.fill(pass);
-  
+
+      await page.keyboard.press('Enter');
       // Botón Login (buscar cualquier texto descendiente que diga "Ingresar")
-      const loginBtn = page.locator('button:has-text("ENTRAR")');
+    /*  const loginBtn = page.locator('button:has-text("ENTRAR")');
       await loginBtn.waitFor({ state: 'visible', timeout: 30000 });
-      await loginBtn.click();
+      await loginBtn.click();*/
   
       // Screenshot después de login
       await page.screenshot({ path: 'screenshots/post_login.png', fullPage: true });
