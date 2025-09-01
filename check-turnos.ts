@@ -19,6 +19,7 @@ async function main() {
     const pass = process.env.PASS_MUTUALISTA!;
     console.log("USER_MUTUALISTA:", !!process.env.USER_MUTUALISTA);
     console.log("PASS_MUTUALISTA:", !!process.env.PASS_MUTUALISTA);
+    await page.getByRole('textbox', { name: 'Documento Documento' }).waitFor({ state: 'visible', timeout: 30000 });
     await page.getByRole('textbox', { name: 'Documento Documento' }).fill(user);
     await page.getByRole('textbox', { name: 'Contraseña Contraseña' }).fill(pass);
     await page.getByRole('textbox', { name: 'Contraseña Contraseña' }).press('Enter');
