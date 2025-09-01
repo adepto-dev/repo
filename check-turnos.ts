@@ -77,7 +77,7 @@ async function main() {
       await frame.getByRole('textbox', { name: 'Buscar especialidad o' }).press("Enter");
 
       await frame.locator("div").filter({ hasText: /^DERMATOLOGIA$/ }).nth(3).click();
-      await page.getByRole("button", { name: "Más tarde" }).click();
+     // await page.getByRole("button", { name: "Más tarde" }).click();
     } catch (e) {
       await page.screenshot({ path: 'screenshots/fallo_busqueda.png', fullPage: true });
       console.error("Fallo durante búsqueda de especialidad:", e);
@@ -89,7 +89,7 @@ async function main() {
 
     await page.screenshot({ path: 'screenshots/resultado.png', fullPage: true });
 
-    if (!noHayHoras) {
+    if (noHayHoras) {
       await fetch(DISCORD_WEBHOOK, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
