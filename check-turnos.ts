@@ -43,7 +43,8 @@ async function main() {
       await page.screenshot({ path: 'screenshots/fallo_login.png', fullPage: true });
       console.error("Fallo en login:", error);
       throw error;
-      
+    }
+    
     await page.screenshot({ path: 'screenshots/antes_agenda.png', fullPage: true });
 
     // Click en botón Agenda con manejo de error y timeout extendido
