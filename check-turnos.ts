@@ -85,7 +85,7 @@ async function main() {
     }
 
     // ====== CHEQUEO DE TURNOS ======
-    const noHayHoras = await frame.locator("#span_vEMPTYNOHAYHORAS").waitFor({ state: 'visible', timeout: 60000 }).catch(() => false);
+    const noHayHoras = await frame.locator("#span_vEMPTYNOHAYHORAS").waitFor({ state: 'visible', timeout: 100000 }).catch(() => false);
 
     await page.screenshot({ path: 'screenshots/resultado.png', fullPage: true });
 
@@ -94,7 +94,7 @@ async function main() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          content: "🚨 ¡Hay turnos disponibles en dermatología!",
+          content: "¡Hay turnos disponibles en dermatología!",
         }),
       });
     }
