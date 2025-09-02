@@ -85,11 +85,13 @@ async function main() {
     }
 
     // ====== CHEQUEO DE TURNOS ======
+
+    //ESTA PARTE ESTA RECONTRA BUGEADA TENEMOS QUE VER COMO CAPTURAR QUE LA BUSQUEDA DE ALGUN RESULTADO O QUEDA VACIA LA LISTA Y GUARDAR ESO PARA EL IF DE DSPS
     const noHayHoras = await frame.locator("#span_vEMPTYNOHAYHORAS").waitFor({ state: 'visible', timeout: 100000 }).catch(() => false);
 
     await page.screenshot({ path: 'screenshots/resultado.png', fullPage: true });
 
-    if (noHayHoras) {
+    if (!noHayHoras) {
       await fetch(DISCORD_WEBHOOK, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
