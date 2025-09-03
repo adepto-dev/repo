@@ -85,22 +85,30 @@ async function main() {
     }
 
     // ====== CHEQUEO DE TURNOS ======
-
-    //ESTA PARTE ESTA RECONTRA BUGEADA TENEMOS QUE VER COMO CAPTURAR QUE LA BUSQUEDA DE ALGUN RESULTADO O QUEDA VACIA LA LISTA Y GUARDAR ESO PARA EL IF DE DSPS
-    const noHayHoras = await frame.locator("#span_vEMPTYNOHAYHORAS").waitFor({ state: 'visible', timeout: 100000 }).catch(() => false);
-
-    await page.screenshot({ path: 'screenshots/resultado.png', fullPage: true });
-
-    if (!noHayHoras) {
-      await fetch(DISCORD_WEBHOOK, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          content: "¡Hay turnos disponibles en dermatología!",
-        }),
-      });
+    try {
+      // Buscamos dentro del iframe si aparece algún div con class "row" que tenga contenido
+      const resultados = await frame.locator('div.row').all();
+    
+      await page.screenshot({ path: 'screenshots/resultado.png', fullPage: true });
+    
+      if (resultados.length > 0) {
+        console.log("✅ Se encontraron resultados de turnos");
+    
+        await fetch(DISCORD_WEBHOOK, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            content: "🚨 ¡Hay turnos disponibles en dermatología!",
+          }),
+        });
+      } else {
+        console.log("ℹ️ No hay resultados, sin notificación");
+      }
+    } catch (e) {
+      await page.screenshot({ path: 'screenshots/fallo_chequeo.png', fullPage: true });
+      console.error("Error durante el chequeo de turnos:", e);
+      throw e;
     }
-
   } catch (error) {
     // Captura general si falla cualquier otro paso
     await page.screenshot({ path: 'screenshots/error_general.png', fullPage: true });
